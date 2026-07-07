@@ -1,0 +1,3159 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Scolopacidae Construction Kit</title>
+<style>html,body{margin:0;padding:0;background:transparent;height:auto!important;min-height:0!important;}
+#scolo-root>div{min-height:0!important;}</style></head>
+<body>
+<div id="scolo-root"></div>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const {
+  useState,
+  useRef,
+  useCallback,
+  useMemo
+} = React;
+// ═══════════════════════════════════════════════════════════
+//  THE SCOLOPACIDAE CONSTRUCTION KIT  v4.0
+//  An instrument for Conceptual Ornithology
+// ═══════════════════════════════════════════════════════════
+const CX = 270,
+  CY = 185;
+// ─── HOUSE PALETTE (or·ni·thology · ed. June 2026) ───
+// One ground, two inks, three accents. The retired #1A1A2E navy is gone.
+const SKY = "#E6EAEC"; // Winter sky — the ground beneath everything
+const CARDW = "#FBFAF8"; // Card white — the index-card that holds a specimen
+const CARDED = "#E3E1DB"; // Card edge — hairline border of the white card
+const READINK = "#2A2520"; // Reading ink — near-black warm; body text, egg names
+const SEPIA = "#3D2E1F"; // Sepia — egg outline, headings, the defining specimen line
+const MIDSEP = "#6B5D49"; // Mid-sepia — the bird's skeleton strokes; secondary text
+const MOSS = "#5A6A3A"; // Moss — the menu green; mono labels, tags, accents
+const RUFOUS = "#8B5E3C"; // Rufous — plumage-as-line; the winnowing drumming-strokes
+const VIOLET = "#6A4A7A"; // Violet — the mark in the margin: cf. and nothing else
+// Legacy aliases, re-pointed to house inks so the blueprint reads true on sky:
+//   INK was the navy → now the SKELETON ink (defining strokes, full opacity)
+//   FAINT was dark sepia → kept as the DETAILING ink (secondary marks, with opacity)
+const INK = MIDSEP; // defining shapes: body, head, bill, leg-bones
+const FAINT = SEPIA; // secondary marks: wing-triangle, tail, hatching, eye-stripe
+const WHITE = CARDW;
+const MONO = "'IBM Plex Mono','SF Mono',ui-monospace,Menlo,monospace";
+const SERIF = "'EB Garamond',Georgia,'Iowan Old Style',Palatino,serif";
+const SCALE = 1.15;
+// ─── BODY TYPES ───
+// ── Posture revision, June 2026 (the "coquettish" edition) ──
+// Waders rarely stand level. Mooching across the moss they tip bottom-up:
+// rump raised, breast lowered, head tucked onto the shoulder, bill out
+// over the sphagnum. So each body is now (a) fatter — ry raised ~20%;
+// (b) leaned bottom-up — rot more negative, so the body's tail-end lifts
+// and its head-end drops; (c) head tucked IN off the leading tip (hx less
+// negative) and perched UP onto the shoulder (hy ≈ −ry); (d) rump-anchor
+// lifted to follow the lean (ty more negative). The egg is unaffected: it
+// reads the bird's PART TYPES, never these pixels. The Common Sandpiper
+// keeps its famous near-level teeter — the one wader that mostly stays flat.
+const BODIES = [{
+  id: "large",
+  label: "Large",
+  note: "Curlew · Godwits",
+  term: "50–60 cm total length",
+  rx: 62,
+  ry: 35,
+  rot: -10,
+  hr: 18,
+  hx: -44,
+  hy: -33,
+  ex: -5,
+  ey: -5,
+  bx: -17,
+  by: 5,
+  ly: 30,
+  ls: 16,
+  tx: 57,
+  ty: -9
+}, {
+  id: "medium_large",
+  label: "Medium-large",
+  note: "Whimbrel · Greenshank",
+  term: "30–46 cm",
+  rx: 52,
+  ry: 31,
+  rot: -10,
+  hr: 16,
+  hx: -39,
+  hy: -29,
+  ex: -4,
+  ey: -4,
+  bx: -15,
+  by: 4,
+  ly: 27,
+  ls: 15,
+  tx: 48,
+  ty: -8
+}, {
+  id: "medium",
+  label: "Medium",
+  note: "Redshank · Green Sandpiper",
+  term: "27–29 cm",
+  rx: 48,
+  ry: 29,
+  rot: -11,
+  hr: 15,
+  hx: -36,
+  hy: -27,
+  ex: -4,
+  ey: -4,
+  bx: -14,
+  by: 5,
+  ly: 25,
+  ls: 14,
+  tx: 44,
+  ty: -8
+}, {
+  id: "small_horizontal",
+  label: "Small, horizontal",
+  note: "Common Sandpiper",
+  term: "19–21 cm · low crouch",
+  rx: 46,
+  ry: 23,
+  rot: -6,
+  hr: 14,
+  hx: -37,
+  hy: -21,
+  ex: -4,
+  ey: -4,
+  bx: -13,
+  by: 3,
+  ly: 20,
+  ls: 13,
+  tx: 43,
+  ty: -4
+}, {
+  id: "small_stocky",
+  label: "Small, stocky",
+  note: "Snipe · Jack Snipe",
+  term: "17–27 cm · compact",
+  rx: 42,
+  ry: 28,
+  rot: -12,
+  hr: 14,
+  hx: -31,
+  hy: -26,
+  ex: -4,
+  ey: -5,
+  bx: -13,
+  by: 6,
+  ly: 23,
+  ls: 12,
+  tx: 38,
+  ty: -8
+}, {
+  id: "small",
+  label: "Small",
+  note: "Dunlin",
+  term: "16–20 cm · hunched",
+  rx: 36,
+  ry: 23,
+  rot: -12,
+  hr: 12,
+  hx: -27,
+  hy: -22,
+  ex: -3,
+  ey: -3,
+  bx: -11,
+  by: 4,
+  ly: 20,
+  ls: 11,
+  tx: 32,
+  ty: -6
+}, {
+  id: "rotund",
+  label: "Rotund",
+  note: "Woodcock",
+  term: "33–35 cm · round body, broad",
+  rx: 46,
+  ry: 36,
+  rot: -9,
+  hr: 16,
+  hx: -34,
+  hy: -30,
+  ex: -3,
+  ey: -6,
+  bx: -15,
+  by: 6,
+  ly: 32,
+  ls: 14,
+  tx: 42,
+  ty: -7
+}, {
+  id: "pot_bellied",
+  label: "Pot-bellied, small head",
+  note: "Ruff (non-breeding)",
+  term: "20–32 cm",
+  rx: 50,
+  ry: 32,
+  rot: -11,
+  hr: 13,
+  hx: -38,
+  hy: -29,
+  ex: -3,
+  ey: -3,
+  bx: -12,
+  by: 4,
+  ly: 28,
+  ls: 14,
+  tx: 46,
+  ty: -8
+}];
+// ─── BODY COLOURS  (colour-as-line, never fill) ───
+// "A rufous-chestnut woodcock is a bird whose hatch-lines and accent-strokes
+//  are inked rufous — not a brown-bodied shape." The egg reads the parameter
+//  exactly as before; the colour has simply moved from fill to stroke.
+//  `color` is the plume INK the bird's colour-bearing marks take. null = stay
+//  on the skeleton ink (a clean mid-sepia blueprint).
+const BODY_COLORS = [{
+  id: "none",
+  label: "None (line-bird only)",
+  note: "Skeleton ink, mathematical",
+  color: null
+}, {
+  id: "pale_buff",
+  label: "Pale buff-brown",
+  note: "Curlew, Redshank — warm, sandy",
+  color: "#A6855A"
+}, {
+  id: "warm_brown",
+  label: "Warm brown",
+  note: "Snipe, Dunlin — earthy",
+  color: "#8A6A45"
+}, {
+  id: "olive_brown",
+  label: "Olive-brown",
+  note: "Common Sandpiper — greenish warmth",
+  color: "#71743F"
+}, {
+  id: "dark_olive",
+  label: "Dark olive-brown",
+  note: "Green Sandpiper — notably dark",
+  color: "#54562F"
+}, {
+  id: "rufous_chestnut",
+  label: "Rufous-chestnut",
+  note: "Woodcock — leaf-litter camouflage",
+  color: RUFOUS
+}, {
+  id: "grey_brown",
+  label: "Grey-brown",
+  note: "Non-breeding Greenshank, Godwits",
+  color: "#7C7468"
+}, {
+  id: "brick_rufous",
+  label: "Brick-red / rufous",
+  note: "Breeding Godwit — lacquered intensity",
+  color: "#9A4A28"
+}];
+// ─── BILL TYPES ───
+const BILLS = [{
+  id: "very_long_decurved",
+  label: "Very long, strongly decurved",
+  term: "100–150 mm",
+  note: "Curlew — distal half curves down, Herbst's corpuscles at tip",
+  path: "M 0 0 C -25 -3 -55 2 -82 18",
+  w: 2.2,
+  len: 82
+}, {
+  id: "long_decurved_kinked",
+  label: "Long, decurved with kink",
+  term: "70–90 mm",
+  note: "Whimbrel — a bend at the midpoint, not a smooth curve",
+  path: "M 0 0 L -28 -2 Q -42 0 -58 14",
+  w: 2,
+  len: 58
+}, {
+  id: "long_straight",
+  label: "Long, straight",
+  term: "62–75 mm",
+  note: "Snipe — laterally compressed, prehensile tip. Woodcock similar.",
+  path: "M 0 0 L -68 -2",
+  w: 2.2,
+  len: 68
+}, {
+  id: "medium_straight",
+  label: "Medium, straight",
+  term: "35–45 mm",
+  note: "Redshank — straight, functional",
+  path: "M 0 0 L -36 -1",
+  w: 2,
+  len: 36
+}, {
+  id: "medium_upturned",
+  label: "Medium, slightly upturned",
+  term: "45–55 mm",
+  note: "Greenshank — gentle upward curve is diagnostic",
+  path: "M 0 0 Q -20 0 -42 -6",
+  w: 2,
+  len: 42
+}, {
+  id: "short_straight",
+  label: "Short, straight, fine",
+  term: "20–25 mm",
+  note: "Common Sandpiper — neat, fine",
+  path: "M 0 0 L -20 -1",
+  w: 1.8,
+  len: 20
+}, {
+  id: "medium_drooped",
+  label: "Medium, drooped tip",
+  term: "28–35 mm",
+  note: "Dunlin — subtly decurved at the very tip",
+  path: "M 0 0 L -24 -1 Q -28 0 -31 3",
+  w: 2,
+  len: 31
+}, {
+  id: "very_long_straight",
+  label: "Very long, perfectly straight",
+  term: "70–110 mm",
+  note: "Black-tailed Godwit — absolute straightness",
+  path: "M 0 0 L -78 -1",
+  w: 2.2,
+  len: 78
+}, {
+  id: "long_gentle_upturn",
+  label: "Long, gently upturned",
+  term: "75–105 mm",
+  note: "Bar-tailed Godwit — consistent upturn, easy to miss",
+  path: "M 0 0 Q -28 0 -62 -7",
+  w: 2,
+  len: 62
+}, {
+  id: "medium_slightly_drooped",
+  label: "Medium, slightly drooped",
+  term: "30–38 mm",
+  note: "Ruff · Green Sandpiper",
+  path: "M 0 0 L -28 -1 Q -32 0 -34 2",
+  w: 1.8,
+  len: 34
+}];
+// ─── BILL COLOURS ───
+const BILL_COLORS = [{
+  id: "dark",
+  label: "Dark throughout",
+  note: "Dunlin, Wood Sandpiper",
+  color: INK,
+  baseColor: null
+}, {
+  id: "dark_pale_base",
+  label: "Pale pinkish base",
+  note: "Curlew — grading to dark tip",
+  color: INK,
+  baseColor: "#c4988a"
+}, {
+  id: "red_base",
+  label: "Red-orange base",
+  note: "Redshank — instantly distinctive",
+  color: INK,
+  baseColor: "#c45a3a"
+}, {
+  id: "greenish_base",
+  label: "Greenish-flesh base",
+  note: "Snipe — subtle",
+  color: INK,
+  baseColor: "#8a9a6a"
+}, {
+  id: "pink_orange_base",
+  label: "Pink-orange base",
+  note: "Black-tailed Godwit — vivid",
+  color: INK,
+  baseColor: "#d4887a"
+}, {
+  id: "grey_green",
+  label: "Grey-green, dark tip",
+  note: "Greenshank — cool-toned",
+  color: INK,
+  baseColor: "#7a8a7a"
+}, {
+  id: "brownish",
+  label: "Dark brownish",
+  note: "Common Sandpiper",
+  color: "#3a3020",
+  baseColor: null
+}];
+// ─── HEAD PATTERNS ───
+const HEADS = [{
+  id: "plain_streaked",
+  label: "Plain, indistinct supercilium",
+  term: "No bold crown pattern",
+  note: "Curlew",
+  render: r => [{
+    d: `M ${-r * 0.7} ${-r * 0.3} L ${r * 0.5} ${-r * 0.35}`,
+    o: 0.25,
+    w: 1,
+    pale: true
+  }, {
+    d: `M ${-r * 0.6} ${-r * 0.1} L ${r * 0.4} ${-r * 0.15}`,
+    o: 0.15,
+    w: 0.8
+  }]
+}, {
+  id: "four_stripe",
+  label: "Four longitudinal stripes",
+  term: "Median crown-stripe + lateral + supercilia",
+  note: "Common Snipe — the striped helmet",
+  render: r => [{
+    d: `M ${-r * 0.8} ${-r * 0.15} L ${r * 0.6} ${-r * 0.2}`,
+    o: 0.65,
+    w: 1.4,
+    pale: true
+  }, {
+    d: `M ${-r * 0.7} ${-r * 0.45} L ${r * 0.5} ${-r * 0.5}`,
+    o: 0.35,
+    w: 1
+  }, {
+    d: `M ${-r * 0.7} ${r * 0.1} L ${r * 0.5} ${r * 0.05}`,
+    o: 0.35,
+    w: 1
+  }, {
+    d: `M ${-r * 0.8} ${-r * 0.7} L ${r * 0.4} ${-r * 0.75}`,
+    o: 0.45,
+    w: 1.2,
+    pale: true
+  }, {
+    d: `M ${-r * 0.8} ${r * 0.3} L ${r * 0.4} ${r * 0.25}`,
+    o: 0.45,
+    w: 1.2,
+    pale: true
+  }]
+}, {
+  id: "two_stripe",
+  label: "Two stripes, no median",
+  term: "Supercilia only — no central stripe",
+  note: "Jack Snipe — the MISSING stripe is the diagnostic",
+  render: r => [{
+    d: `M ${-r * 0.8} ${-r * 0.6} L ${r * 0.5} ${-r * 0.65}`,
+    o: 0.5,
+    w: 1.3,
+    pale: true
+  }, {
+    d: `M ${-r * 0.8} ${r * 0.2} L ${r * 0.5} ${r * 0.15}`,
+    o: 0.5,
+    w: 1.3,
+    pale: true
+  }]
+}, {
+  id: "three_stripe_bold",
+  label: "Three bold crown stripes",
+  term: "Median + supercilia, bold",
+  note: "Whimbrel — the exam question vs Curlew",
+  render: r => [{
+    d: `M ${-r * 0.8} ${-r * 0.2} L ${r * 0.6} ${-r * 0.25}`,
+    o: 0.6,
+    w: 1.5,
+    pale: true
+  }, {
+    d: `M ${-r * 0.8} ${-r * 0.6} L ${r * 0.5} ${-r * 0.65}`,
+    o: 0.45,
+    w: 1.2,
+    pale: true
+  }, {
+    d: `M ${-r * 0.8} ${r * 0.15} L ${r * 0.5} ${r * 0.1}`,
+    o: 0.45,
+    w: 1.2,
+    pale: true
+  }]
+}, {
+  id: "transverse_bars",
+  label: "Transverse barring",
+  term: "Horizontal bands across crown & nape",
+  note: "Woodcock — unique. Bars, not stripes.",
+  render: r => [{
+    d: `M ${-r * 0.3} ${-r * 0.7} L ${r * 0.6} ${-r * 0.65}`,
+    o: 0.4,
+    w: 1.2
+  }, {
+    d: `M ${-r * 0.4} ${-r * 0.4} L ${r * 0.7} ${-r * 0.35}`,
+    o: 0.35,
+    w: 1.1
+  }, {
+    d: `M ${-r * 0.4} ${-r * 0.1} L ${r * 0.7} ${-r * 0.05}`,
+    o: 0.3,
+    w: 1
+  }, {
+    d: `M ${-r * 0.3} ${r * 0.2} L ${r * 0.6} ${r * 0.25}`,
+    o: 0.25,
+    w: 0.9
+  }]
+}, {
+  id: "eyestripe",
+  label: "Dark eyestripe, plain crown",
+  term: "Loral stripe through eye",
+  note: "Common Sandpiper — simple, clean",
+  render: r => [{
+    d: `M ${-r * 0.9} ${r * 0.05} L ${r * 0.5} ${-r * 0.05}`,
+    o: 0.55,
+    w: 1.6
+  }]
+}, {
+  id: "bold_supercilium",
+  label: "Bold white supercilium",
+  term: "Prominent pale eyebrow",
+  note: "Wood Sandpiper — bolder than Green Sandpiper",
+  render: r => [{
+    d: `M ${-r * 0.9} ${-r * 0.5} L ${r * 0.6} ${-r * 0.55}`,
+    o: 0.6,
+    w: 2.2,
+    pale: true
+  }, {
+    d: `M ${-r * 0.8} ${r * 0.1} L ${r * 0.3} ${r * 0.05}`,
+    o: 0.3,
+    w: 1
+  }]
+}, {
+  id: "dark_spangled",
+  label: "Dark, white-spotted (spangled)",
+  term: "Olive-brown, heavily spotted white",
+  note: "Green Sandpiper — starling-like speckling",
+  render: r => [{
+    d: `M ${-r * 0.55} ${-r * 0.5} L ${-r * 0.35} ${-r * 0.47}`,
+    o: 0.55,
+    w: 2,
+    pale: true
+  }, {
+    d: `M ${-r * 0.05} ${-r * 0.58} L ${r * 0.15} ${-r * 0.55}`,
+    o: 0.5,
+    w: 1.8,
+    pale: true
+  }, {
+    d: `M ${r * 0.3} ${-r * 0.4} L ${r * 0.48} ${-r * 0.37}`,
+    o: 0.45,
+    w: 1.6,
+    pale: true
+  }, {
+    d: `M ${-r * 0.3} ${-r * 0.15} L ${-r * 0.12} ${-r * 0.12}`,
+    o: 0.4,
+    w: 1.5,
+    pale: true
+  }, {
+    d: `M ${r * 0.1} ${-r * 0.25} L ${r * 0.25} ${-r * 0.22}`,
+    o: 0.35,
+    w: 1.3,
+    pale: true
+  }]
+}, {
+  id: "streaked_plain",
+  label: "Streaked, no bold pattern",
+  term: "General dark streaking",
+  note: "Greenshank, Godwits",
+  render: r => [{
+    d: `M ${-r * 0.5} ${-r * 0.4} L ${r * 0.3} ${-r * 0.45}`,
+    o: 0.2,
+    w: 0.8
+  }, {
+    d: `M ${-r * 0.6} ${-r * 0.15} L ${r * 0.4} ${-r * 0.2}`,
+    o: 0.15,
+    w: 0.7
+  }, {
+    d: `M ${-r * 0.5} ${r * 0.1} L ${r * 0.3} ${r * 0.05}`,
+    o: 0.12,
+    w: 0.7
+  }]
+}];
+// ─── LEG OPTIONS ───
+const LEG_LENGTHS = [{
+  id: "short",
+  label: "Short",
+  term: "Tarsus compact",
+  note: "Snipe, Woodcock",
+  len: 32
+}, {
+  id: "medium",
+  label: "Medium",
+  term: "Tarsus moderate",
+  note: "Sandpipers, Dunlin",
+  len: 48
+}, {
+  id: "long",
+  label: "Long",
+  term: "Tarsus long",
+  note: "Redshank, Greenshank",
+  len: 62
+}, {
+  id: "very_long",
+  label: "Very long",
+  term: "Tarsus elongated",
+  note: "Godwits",
+  len: 78
+}];
+const LEG_COLORS = [{
+  id: "red_orange",
+  label: "Red-orange",
+  note: "Redshank",
+  color: "#c45a3a"
+}, {
+  id: "greenish_yellow",
+  label: "Greenish-yellow",
+  note: "Common Sandpiper, Snipe",
+  color: "#8a9a5a"
+}, {
+  id: "blue_grey",
+  label: "Blue-grey",
+  note: "Curlew, Whimbrel",
+  color: "#6a7a8a"
+}, {
+  id: "black",
+  label: "Black",
+  note: "Dunlin",
+  color: "#2a2a2a"
+}, {
+  id: "yellow",
+  label: "Yellow",
+  note: "Wood Sandpiper, Greenshank",
+  color: "#b8a030"
+}, {
+  id: "orange_yellow",
+  label: "Orange-yellow",
+  note: "Ruff (non-breeding)",
+  color: "#cc8830"
+}, {
+  id: "pinkish_grey",
+  label: "Pinkish-grey",
+  note: "Woodcock",
+  color: "#a08880"
+}, {
+  id: "dark_grey_black",
+  label: "Dark grey-black",
+  note: "Godwits",
+  color: "#3a3a40"
+}];
+// ─── TAIL TYPES ───
+const TAILS = [{
+  id: "plain",
+  label: "Plain, short",
+  term: "Rectrices unremarkable",
+  note: "Most waders at rest"
+}, {
+  id: "elevated",
+  label: "Elevated, bobbing",
+  term: "Tail raised, rhythmic dip",
+  note: "Common Sandpiper — the diagnostic bob"
+}, {
+  id: "spread_display",
+  label: "Spread, display fan",
+  term: "Outer rectrices splayed",
+  note: "Snipe winnowing — stiffened feathers vibrate"
+}, {
+  id: "long_barred",
+  label: "Long, barred",
+  term: "Broad, dark-barred rectrices",
+  note: "Woodcock — rounded, pale-tipped"
+}, {
+  id: "body_bob",
+  label: "Whole-body bob",
+  term: "Entire body pumps",
+  note: "Jack Snipe — unique rhythmic pumping"
+}];
+// ─── HABITATS ───
+const HABITATS = [{
+  id: "none",
+  label: "None (bare sky)",
+  note: "Clean"
+}, {
+  id: "moorland",
+  label: "Open moorland",
+  note: "Blanket bog, heather, cotton-grass"
+}, {
+  id: "water_edge",
+  label: "River / stream margin",
+  note: "Shingle, running water"
+}, {
+  id: "boggy_pool",
+  label: "Boggy pool / flush",
+  note: "Sphagnum, standing water"
+}, {
+  id: "woodland_floor",
+  label: "Woodland floor",
+  note: "Dead leaves, bracken"
+}, {
+  id: "wet_meadow",
+  label: "Wet hay meadow",
+  note: "Rush-pasture, rank grass"
+}];
+// ─── SPECIAL FEATURES ───
+const EXTRAS = [{
+  id: "belly_patch",
+  label: "Black belly patch",
+  term: "Ventral melanistic area",
+  note: "Dunlin breeding — unique among North Pennines waders"
+}, {
+  id: "shoulder_spur",
+  label: "White shoulder spur",
+  term: "Pectoral notch",
+  note: "Common Sandpiper — wedge between breast & wing"
+}, {
+  id: "wing_bar",
+  label: "Wing bar on folded wing",
+  term: "Greater covert tips pale",
+  note: "Visible at rest"
+}, {
+  id: "white_rump",
+  label: "White rump (annotated)",
+  term: "Uppertail coverts white",
+  note: "Curlew, Redshank, Godwits"
+}, {
+  id: "breast_streaking",
+  label: "Heavy breast streaking",
+  term: "Pectoral streaks",
+  note: "Redshank, Curlew, Greenshank"
+}, {
+  id: "flank_barring",
+  label: "Flank barring",
+  term: "Dark bars on flanks",
+  note: "Black-tailed Godwit breeding"
+}, {
+  id: "bob_lines",
+  label: "Motion lines (tail bob)",
+  term: "Kinetic notation",
+  note: "The bob, rendered"
+}, {
+  id: "construction",
+  label: "Construction circles",
+  term: "Geometric armature",
+  note: "The mathematics of the bird"
+}, {
+  id: "scapular_lines",
+  label: "Pale scapular lines",
+  term: "Longitudinal mantle stripes",
+  note: "Snipe, Jack Snipe"
+}, {
+  id: "rufous_patch",
+  label: "Rufous breeding patch",
+  term: "Chestnut-toned mantle overlay",
+  note: "Breeding Dunlin, Godwit"
+}];
+// ─── EYE POSITION ───
+const EYE_POSITIONS = [{
+  id: "normal",
+  label: "Normal position",
+  note: "Most waders",
+  ox: 0,
+  oy: 0
+}, {
+  id: "high_back",
+  label: "High & far back on skull",
+  note: "Woodcock — near 360° vision",
+  ox: 0.3,
+  oy: -0.12
+}, {
+  id: "high",
+  label: "High-set, large",
+  note: "Snipe — set high for predator watch",
+  ox: 0.12,
+  oy: -0.1
+}];
+const GROUND_Y = 340;
+// ═══════════════════════════════════════════════════════════
+//  EGG MODULE — verification by egg generation
+//  The egg reads the bird's PARTS, never its species.
+// ═══════════════════════════════════════════════════════════
+function mulberry32(a) {
+  return function () {
+    a |= 0;
+    a = a + 0x6d2b79f5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) {
+  let h = 1817 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+function hexToRgb(h) {
+  const n = parseInt(h.slice(1), 16);
+  return [n >> 16 & 255, n >> 8 & 255, n & 255];
+}
+function rgbToHex(r, g, b) {
+  const c = x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0");
+  return "#" + c(r) + c(g) + c(b);
+}
+function mixHex(h1, h2, t) {
+  const a = hexToRgb(h1),
+    b = hexToRgb(h2);
+  return rgbToHex(lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t));
+}
+const EGG_CAT = {
+  curlew: {
+    name: "Eurasian Curlew",
+    latin: "Numenius arquata",
+    len: 57,
+    wid: 40,
+    d: 0.16,
+    ground: "#9a9456",
+    shade: "#7c7340",
+    blot: "#5a4326",
+    grey: "#8c8378",
+    density: 30,
+    capward: 0.7,
+    coarse: 0.85
+  },
+  snipe: {
+    name: "Common Snipe",
+    latin: "Gallinago gallinago",
+    len: 39,
+    wid: 28,
+    d: 0.175,
+    ground: "#8f8a52",
+    shade: "#6f6a3c",
+    blot: "#3d2516",
+    grey: "#9a9180",
+    density: 40,
+    capward: 0.92,
+    coarse: 0.75
+  },
+  woodcock: {
+    name: "Eurasian Woodcock",
+    latin: "Scolopax rusticola",
+    len: 44,
+    wid: 33,
+    d: 0.075,
+    ground: "#d8c49a",
+    shade: "#bfa97c",
+    blot: "#9a5a32",
+    grey: "#b0a890",
+    density: 26,
+    capward: 0.45,
+    coarse: 0.9
+  },
+  sandpiper: {
+    name: "Common Sandpiper",
+    latin: "Actitis hypoleucos",
+    len: 36,
+    wid: 26,
+    d: 0.15,
+    ground: "#d2bd94",
+    shade: "#b8a276",
+    blot: "#8a4a2a",
+    grey: "#ada58e",
+    density: 34,
+    capward: 0.78,
+    coarse: 0.8
+  },
+  dunlin: {
+    name: "Dunlin",
+    latin: "Calidris alpina",
+    len: 35,
+    wid: 24,
+    d: 0.155,
+    ground: "#9aa06a",
+    shade: "#7c8250",
+    blot: "#8a3a22",
+    grey: "#9a9484",
+    density: 32,
+    capward: 0.6,
+    coarse: 0.95
+  },
+  redshank: {
+    name: "Common Redshank",
+    latin: "Tringa totanus",
+    len: 44,
+    wid: 31,
+    d: 0.15,
+    ground: "#cdb588",
+    shade: "#b39e72",
+    blot: "#8a4326",
+    grey: "#a89b86",
+    density: 33,
+    capward: 0.6,
+    coarse: 0.82
+  },
+  jacksnipe: {
+    name: "Jack Snipe",
+    latin: "Lymnocryptes minimus",
+    len: 38,
+    wid: 27,
+    d: 0.165,
+    ground: "#969a64",
+    shade: "#787c48",
+    blot: "#4a3320",
+    grey: "#9a9382",
+    density: 44,
+    capward: 0.55,
+    coarse: 0.45
+  },
+  blackwit: {
+    name: "Black-tailed Godwit",
+    latin: "Limosa limosa",
+    len: 54,
+    wid: 37,
+    d: 0.17,
+    ground: "#8c9050",
+    shade: "#6e7238",
+    blot: "#3a2c1a",
+    grey: "#8c8aa0",
+    density: 30,
+    capward: 0.5,
+    coarse: 0.85
+  },
+  barwit: {
+    name: "Bar-tailed Godwit",
+    latin: "Limosa lapponica",
+    len: 52,
+    wid: 35,
+    d: 0.155,
+    ground: "#9a9c66",
+    shade: "#7c7e48",
+    blot: "#5a4630",
+    grey: "#9a9788",
+    density: 38,
+    capward: 0.5,
+    coarse: 0.55
+  }
+};
+const LEG_ORD = ["short", "medium", "long", "very_long"];
+const BILL_CH = {
+  very_long_decurved: {
+    len: 82,
+    curve: 1
+  },
+  long_decurved_kinked: {
+    len: 58,
+    curve: 0.7
+  },
+  long_straight: {
+    len: 68,
+    curve: 0
+  },
+  medium_straight: {
+    len: 36,
+    curve: 0
+  },
+  medium_upturned: {
+    len: 42,
+    curve: -0.6
+  },
+  short_straight: {
+    len: 20,
+    curve: 0
+  },
+  medium_drooped: {
+    len: 31,
+    curve: 0.3
+  },
+  very_long_straight: {
+    len: 78,
+    curve: 0
+  },
+  long_gentle_upturn: {
+    len: 62,
+    curve: -0.4
+  },
+  medium_slightly_drooped: {
+    len: 34,
+    curve: 0.2
+  }
+};
+const BODY_SIZE = {
+  large: 9,
+  medium_large: 7,
+  medium: 6,
+  small_horizontal: 4.5,
+  small_stocky: 4,
+  small: 3,
+  rotund: 5.5,
+  pot_bellied: 6
+};
+const EXPECT = {
+  curlew: {
+    body: "large",
+    leg: "long",
+    bill: "very_long_decurved",
+    tone: "pale_buff",
+    hab: "moorland",
+    tail: "plain"
+  },
+  snipe: {
+    body: "small_stocky",
+    leg: "short",
+    bill: "long_straight",
+    tone: "warm_brown",
+    hab: "boggy_pool",
+    tail: "spread_display"
+  },
+  woodcock: {
+    body: "rotund",
+    leg: "short",
+    bill: "long_straight",
+    tone: "rufous_chestnut",
+    hab: "woodland_floor",
+    tail: "long_barred"
+  },
+  sandpiper: {
+    body: "small_horizontal",
+    leg: "medium",
+    bill: "short_straight",
+    tone: "olive_brown",
+    hab: "water_edge",
+    tail: "elevated"
+  },
+  dunlin: {
+    body: "small",
+    leg: "medium",
+    bill: "medium_drooped",
+    tone: "warm_brown",
+    hab: "boggy_pool",
+    tail: "plain"
+  },
+  redshank: {
+    body: "medium",
+    leg: "long",
+    bill: "medium_straight",
+    tone: "grey_brown",
+    hab: "wet_meadow",
+    tail: "plain"
+  },
+  jacksnipe: {
+    body: "small_stocky",
+    leg: "short",
+    bill: "medium_straight",
+    tone: "warm_brown",
+    hab: "boggy_pool",
+    tail: "body_bob"
+  },
+  blackwit: {
+    body: "medium_large",
+    leg: "very_long",
+    bill: "very_long_straight",
+    tone: "brick_rufous",
+    hab: "wet_meadow",
+    tail: "plain"
+  },
+  barwit: {
+    body: "medium_large",
+    leg: "very_long",
+    bill: "long_gentle_upturn",
+    tone: "grey_brown",
+    hab: "wet_meadow",
+    tail: "plain"
+  }
+};
+// Structural parts (body, leg, bill, tail) verify a bird; colour & habitat
+// are gentle tie-breakers only. One wrong structural part → cf.; two → aberrans.
+function partDist(bird, exp) {
+  const dBody = Math.abs(BODY_SIZE[bird.body] - BODY_SIZE[exp.body]) / 6;
+  const dLeg = Math.abs(LEG_ORD.indexOf(bird.leg) - LEG_ORD.indexOf(exp.leg)) / 3;
+  const bB = BILL_CH[bird.bill],
+    eB = BILL_CH[exp.bill];
+  const dBillLen = Math.abs(bB.len - eB.len) / 62;
+  const dBillCurve = Math.abs(bB.curve - eB.curve) / 2;
+  const dTail = bird.tail === exp.tail ? 0 : 1;
+  const dTone = bird.tone === exp.tone ? 0 : 1;
+  const dHab = bird.hab === exp.hab ? 0 : 1;
+  return 1.6 * dBody + 1.1 * dLeg + 1.1 * dBillLen + 1.0 * dBillCurve + 0.9 * dTail + 0.3 * dTone + 0.28 * dHab;
+}
+const PROV = {
+  aberrant: ["aberrant; cf. nothing extant", "provenance unknown; vagrant from no recorded range", "anomalous clutch; parent never identified", "specimen labelled in error; no matching skin", "outlying form; rejected from the principal series", "doubtful; possibly a draughtsman's invention"],
+  hypothetical: ["hypothetical — known only by transmission", "imaginary solution; the bird is yet to be deduced", "no bird precedes it; no bird follows", "received by airwave; never held in the hand", "the egg of a wader that declined to exist", "catalogued ahead of its discovery; discovery pending indefinitely"]
+};
+function provLine(tier, seed, m) {
+  const r = mulberry32((seed ^ Math.round(m.d * 997) ^ m.len * 31 ^ m.wid * 7) >>> 0);
+  const pool = PROV[tier];
+  return pool[Math.floor(r() * pool.length)];
+}
+function birdSeed(bird) {
+  return hashStr([bird.body, bird.bill, bird.tone, bird.leg, bird.legCol, bird.head, bird.tail, bird.eye, bird.hab, (bird.extras || []).slice().sort().join(",")].join("|"));
+}
+function birdToEgg(bird) {
+  let best = Infinity,
+    bk = null;
+  for (const k in EXPECT) {
+    const d = partDist(bird, EXPECT[k]);
+    if (d < best) {
+      best = d;
+      bk = k;
+    }
+  }
+  const seed = birdSeed(bird);
+  let tier;
+  if (best < 0.8) tier = "real";else if (best < 1.6) tier = "cf";else if (best < 2.3) tier = "aberrans";else tier = "hypothetical";
+  const anchor = EGG_CAT[bk];
+  const drift = Math.max(0, best - 0.8);
+  const rr = mulberry32(seed >>> 0);
+  const m = {
+    name: anchor.name,
+    latin: anchor.latin,
+    len: Math.round(anchor.len + (rr() * 2 - 1) * drift * 9),
+    wid: Math.round(anchor.wid + (rr() * 2 - 1) * drift * 6),
+    d: Math.max(0, Math.min(0.46, anchor.d + (rr() * 2 - 1) * drift * 0.16)),
+    capward: Math.max(0.1, Math.min(1, anchor.capward + (rr() * 2 - 1) * drift * 0.3)),
+    coarse: Math.max(0.25, Math.min(1.1, anchor.coarse + (rr() * 2 - 1) * drift * 0.3)),
+    density: Math.round(Math.max(16, Math.min(56, anchor.density + (rr() * 2 - 1) * drift * 10))),
+    ground: anchor.ground,
+    shade: anchor.shade,
+    blot: anchor.blot,
+    grey: anchor.grey
+  };
+  let label,
+    sub,
+    prov = null;
+  if (tier === "real") {
+    label = anchor.name;
+    sub = anchor.latin;
+  } else if (tier === "cf") {
+    label = "Ovum incognitum";
+    sub = "cf. " + anchor.name;
+  } else if (tier === "aberrans") {
+    label = "Ovum aberrans";
+    prov = provLine("aberrant", seed, m);
+    sub = prov;
+  } else {
+    label = "Ovum hypotheticum";
+    prov = provLine("hypothetical", seed, m);
+    sub = prov;
+  }
+  const code = tier === "real" || tier === "cf" ? `${bk}·${seed % 9000 + 1000}` : `${seed % 9000 + 1000}·${seed % 900 + 100}`;
+  return {
+    m,
+    tier,
+    label,
+    sub,
+    prov,
+    nearest: bk,
+    score: best,
+    seed,
+    code
+  };
+}
+// ─── RICH TRANSMISSION CODE ───────────────────────────────────
+// A real egg travels as its NAME (snipe·1817) — the catalogue is the
+// shared dictionary, the word is sufficient. A 'patovum has no name; it
+// must travel as its BODY. So non-real eggs are serialised whole: every
+// morphological parameter, the tier, and the provenance LINE itself, so
+// the imaginary egg arrives intact — still imaginary, never demoted in
+// transit. Marker `ov1~` lets the Transmissor recognise a body-code on
+// sight. Colours are packed as raw hex (sans #); the provenance string
+// rides last, URI-encoded, after a `|`. Same egg in, same egg out.
+const HEX6 = h => h.replace("#", "").padStart(6, "0").slice(0, 6);
+function encodeRichCode(egg, mottleSeed) {
+  const m = egg.m;
+  const fields = [egg.tier,
+  // cf | aberrans | hypothetical
+  m.len, m.wid, m.d,
+  // full-precision: the freckle scatter
+  m.capward,
+  //   reads these exactly, so they must
+  m.coarse,
+  //   round-trip to the bit, not be rounded
+  m.density, HEX6(m.ground), HEX6(m.shade), HEX6(m.blot), HEX6(m.grey), (mottleSeed >>> 0).toString(36),
+  // the exact freckle seed
+  egg.nearest || "" // the cf. landmark, for the whisper
+  ].join("~");
+  const provPart = egg.prov ? "|" + encodeURIComponent(egg.prov) : "";
+  return "ov1~" + fields + provPart;
+}
+// ─── EGG GEOMETRY (Hügelschäffer) ───
+function eggPath(cx, cy, halfLen, halfWid, d, n) {
+  n = n || 140;
+  let pts = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n * Math.PI * 2;
+    const ex = Math.cos(t);
+    const ey = Math.sin(t) * Math.exp(-d * Math.cos(t));
+    pts.push([cx + ey * halfWid, cy + ex * halfLen]);
+  }
+  return "M " + pts.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(" ") + " Z";
+}
+function polyPoints(cx, cy, halfLen, halfWid, d, n) {
+  n = n || 90;
+  let pts = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n * Math.PI * 2;
+    const ex = Math.cos(t);
+    const ey = Math.sin(t) * Math.exp(-d * Math.cos(t));
+    pts.push([cx + ey * halfWid, cy + ex * halfLen]);
+  }
+  return pts;
+}
+function pointInPoly(px, py, poly) {
+  let c = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i][0],
+      yi = poly[i][1],
+      xj = poly[j][0],
+      yj = poly[j][1];
+    if (yi > py !== yj > py && px < (xj - xi) * (py - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+function genSpeckles(m, seed, cx, cy, halfLen, halfWid) {
+  const rng = mulberry32((seed ^ Math.round(m.d * 1000) ^ m.len << 3) >>> 0);
+  const poly = polyPoints(cx, cy, halfLen, halfWid, m.d);
+  const top = cy - halfLen,
+    bot = cy + halfLen,
+    left = cx - halfWid,
+    right = cx + halfWid;
+  const deep = [],
+    faint = [],
+    pepper = [];
+  const targetBig = Math.round(m.density * 0.55),
+    targetSmall = Math.round(m.density * 1.5);
+  let tries = 0;
+  while (deep.length + faint.length < targetBig && tries < 5000) {
+    tries++;
+    const qx = lerp(left, right, rng()),
+      qy = lerp(top, bot, rng());
+    if (!pointInPoly(qx, qy, poly)) continue;
+    const frac = (qy - top) / (bot - top);
+    const accept = Math.pow(1 - frac, lerp(0.6, 2.4, m.capward)) + 0.1;
+    if (rng() > accept) continue;
+    const sizeBase = lerp(2.4, 9.5, m.coarse) * (0.55 + 0.6 * (1 - frac));
+    const r0 = sizeBase * lerp(0.6, 1.25, rng());
+    const rx = r0 * lerp(0.8, 1.35, rng()),
+      ry = r0 * lerp(0.6, 1.0, rng()),
+      rot = rng() * 180;
+    (rng() < 0.6 ? deep : faint).push([qx, qy, rx, ry, rot]);
+  }
+  tries = 0;
+  while (pepper.length < targetSmall && tries < 7000) {
+    tries++;
+    const qx = lerp(left, right, rng()),
+      qy = lerp(top, bot, rng());
+    if (!pointInPoly(qx, qy, poly)) continue;
+    const frac = (qy - top) / (bot - top);
+    const accept = Math.pow(1 - frac, lerp(0.4, 1.6, m.capward)) + 0.22;
+    if (rng() > accept) continue;
+    pepper.push([qx, qy, lerp(0.6, 2.0, rng())]);
+  }
+  return {
+    deep,
+    faint,
+    pepper
+  };
+}
+function EggSVG({
+  egg,
+  showConstruction,
+  mottleSeed
+}) {
+  const m = egg.m,
+    seed = egg.seed,
+    ms = mottleSeed == null ? egg.seed : mottleSeed;
+  const cx = 150,
+    cy = 180,
+    VB = 360,
+    pxPerMm = 2.5;
+  const halfLen = m.len / 2 * pxPerMm,
+    halfWid = m.wid / 2 * pxPerMm;
+  const path = eggPath(cx, cy, halfLen, halfWid, m.d);
+  const sp = useMemo(() => genSpeckles(m, ms, cx, cy, halfLen, halfWid), [m, ms, halfLen, halfWid]);
+  const top = cy - halfLen,
+    bot = cy + halfLen;
+  const gid = "es" + seed;
+  return /*#__PURE__*/React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: `0 0 300 ${VB}`,
+    width: "100%",
+    style: {
+      display: "block",
+      maxWidth: 280,
+      margin: "0 auto"
+    }
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("radialGradient", {
+    id: gid + "g",
+    cx: "42%",
+    cy: "32%",
+    r: "78%"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: mixHex(m.ground, "#ffffff", 0.35)
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "55%",
+    stopColor: m.ground
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: m.shade
+  })), /*#__PURE__*/React.createElement("clipPath", {
+    id: gid + "c"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: path
+  }))), /*#__PURE__*/React.createElement("path", {
+    d: path,
+    fill: `url(#${gid}g)`,
+    stroke: FAINT,
+    strokeWidth: "1.4",
+    opacity: "0.97"
+  }), /*#__PURE__*/React.createElement("g", {
+    clipPath: `url(#${gid}c)`
+  }, sp.faint.map((b, i) => /*#__PURE__*/React.createElement("ellipse", {
+    key: "f" + i,
+    cx: b[0],
+    cy: b[1],
+    rx: b[2],
+    ry: b[3],
+    transform: `rotate(${b[4]} ${b[0]} ${b[1]})`,
+    fill: m.grey,
+    opacity: "0.42"
+  })), sp.deep.map((b, i) => /*#__PURE__*/React.createElement("ellipse", {
+    key: "d" + i,
+    cx: b[0],
+    cy: b[1],
+    rx: b[2],
+    ry: b[3],
+    transform: `rotate(${b[4]} ${b[0]} ${b[1]})`,
+    fill: m.blot,
+    opacity: "0.62"
+  })), sp.pepper.map((b, i) => /*#__PURE__*/React.createElement("circle", {
+    key: "p" + i,
+    cx: b[0],
+    cy: b[1],
+    r: b[2],
+    fill: m.blot,
+    opacity: "0.4"
+  })), /*#__PURE__*/React.createElement("ellipse", {
+    cx: cx,
+    cy: bot,
+    rx: halfWid * 1.05,
+    ry: halfLen * 0.5,
+    fill: m.shade,
+    opacity: "0.14"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: cx - halfWid * 0.32,
+    cy: top + halfLen * 0.5,
+    rx: halfWid * 0.28,
+    ry: halfLen * 0.26,
+    fill: "#fffaf0",
+    opacity: "0.22"
+  })), /*#__PURE__*/React.createElement("path", {
+    d: path,
+    fill: "none",
+    stroke: FAINT,
+    strokeWidth: "1.4",
+    opacity: "0.55"
+  }), showConstruction && /*#__PURE__*/React.createElement("g", {
+    fill: "none",
+    stroke: MIDSEP
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: cx,
+    cy: top + halfLen * 0.62,
+    r: halfWid,
+    strokeWidth: "0.7",
+    opacity: "0.4"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: cx,
+    cy: bot - halfLen * 0.42,
+    r: halfWid * 0.62,
+    strokeWidth: "0.7",
+    opacity: "0.4"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: cx,
+    cy: cy,
+    rx: halfWid,
+    ry: halfLen,
+    strokeWidth: "0.6",
+    strokeDasharray: "2,5",
+    opacity: "0.35"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: cx,
+    y1: top - 14,
+    x2: cx,
+    y2: bot + 16,
+    strokeWidth: "0.5",
+    strokeDasharray: "4,6",
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: cx - halfWid - 6,
+    y: top + 4,
+    fontSize: "9",
+    fill: MIDSEP,
+    opacity: "0.7",
+    textAnchor: "end",
+    fontFamily: MONO
+  }, "d=", m.d.toFixed(3))), /*#__PURE__*/React.createElement("g", {
+    opacity: "0.65"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: cx + halfWid + 14,
+    y1: top,
+    x2: cx + halfWid + 14,
+    y2: bot,
+    stroke: MIDSEP,
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: cx + halfWid + 10,
+    y1: top,
+    x2: cx + halfWid + 18,
+    y2: top,
+    stroke: MIDSEP,
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: cx + halfWid + 10,
+    y1: bot,
+    x2: cx + halfWid + 18,
+    y2: bot,
+    stroke: MIDSEP,
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: cx + halfWid + 23,
+    y: cy + 3,
+    fontSize: "10",
+    fill: MIDSEP,
+    fontFamily: MONO
+  }, m.len, " mm")), /*#__PURE__*/React.createElement("g", {
+    opacity: "0.5"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: cx - halfWid,
+    y1: bot + 20,
+    x2: cx + halfWid,
+    y2: bot + 20,
+    stroke: MIDSEP,
+    strokeWidth: "0.8"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: cx - halfWid,
+    y1: bot + 16,
+    x2: cx - halfWid,
+    y2: bot + 24,
+    stroke: MIDSEP,
+    strokeWidth: "0.8"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: cx + halfWid,
+    y1: bot + 16,
+    x2: cx + halfWid,
+    y2: bot + 24,
+    stroke: MIDSEP,
+    strokeWidth: "0.8"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: cx,
+    y: bot + 34,
+    fontSize: "9",
+    fill: MIDSEP,
+    textAnchor: "middle",
+    fontFamily: MONO
+  }, m.wid, " mm")));
+}
+// ─── HABITAT RENDERER ───
+function HabitatSVG({
+  id
+}) {
+  if (id === "none") return null;
+  if (id === "moorland") return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+    d: `M 0 ${GROUND_Y} Q 40 ${GROUND_Y - 6} 80 ${GROUND_Y - 2} Q 130 ${GROUND_Y - 8} 180 ${GROUND_Y - 3} Q 230 ${GROUND_Y - 9} 280 ${GROUND_Y - 4} Q 330 ${GROUND_Y - 7} 380 ${GROUND_Y - 2} Q 430 ${GROUND_Y - 8} 480 ${GROUND_Y - 3} Q 510 ${GROUND_Y - 6} 540 ${GROUND_Y - 1}`,
+    fill: "none",
+    stroke: "#7a7252",
+    strokeWidth: "1.5",
+    opacity: "0.6"
+  }), [45, 130, 250, 370, 460].map((x, i) => /*#__PURE__*/React.createElement("g", {
+    key: i,
+    opacity: "0.5"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: `M ${x} ${GROUND_Y - 3 + i % 2 * 2} Q ${x + 6} ${GROUND_Y - 14 - i % 3 * 3} ${x + 12} ${GROUND_Y - 3 + i % 2 * 2}`,
+    fill: "none",
+    stroke: "#6a5a4a",
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: x + 3,
+    cy: GROUND_Y - 12 - i % 3 * 2,
+    r: "3",
+    fill: "#8a6a7a",
+    opacity: "0.35"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: x + 8,
+    cy: GROUND_Y - 10 - i % 3 * 2,
+    r: "2.5",
+    fill: "#8a6a7a",
+    opacity: "0.3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: x + 6,
+    cy: GROUND_Y - 14 - i % 3 * 2,
+    r: "2",
+    fill: "#8a6a7a",
+    opacity: "0.25"
+  }))), [90, 210, 340, 490].map((x, i) => /*#__PURE__*/React.createElement("g", {
+    key: `c${i}`,
+    opacity: "0.55"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: x,
+    y1: GROUND_Y - 2,
+    x2: x + 1,
+    y2: GROUND_Y - 20 - i % 2 * 5,
+    stroke: "#7a8a5a",
+    strokeWidth: "0.7"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: x + 1,
+    cy: GROUND_Y - 22 - i % 2 * 5,
+    rx: "4",
+    ry: "3",
+    fill: "#d8d0b8",
+    opacity: "0.6"
+  }))), /*#__PURE__*/React.createElement("path", {
+    d: `M 0 ${GROUND_Y + 5} Q 60 ${GROUND_Y + 2} 120 ${GROUND_Y + 5} Q 200 ${GROUND_Y + 8} 280 ${GROUND_Y + 4} Q 360 ${GROUND_Y + 7} 440 ${GROUND_Y + 4} L 540 ${GROUND_Y + 6}`,
+    fill: "none",
+    stroke: "#8a7e62",
+    strokeWidth: "0.7",
+    opacity: "0.3"
+  }));
+  if (id === "water_edge") return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+    d: `M 0 ${GROUND_Y} Q 60 ${GROUND_Y - 5} 140 ${GROUND_Y - 2} Q 220 ${GROUND_Y - 6} 300 ${GROUND_Y - 1} Q 380 ${GROUND_Y - 4} 460 ${GROUND_Y - 2} L 540 ${GROUND_Y - 3}`,
+    fill: "none",
+    stroke: "#8a7e5a",
+    strokeWidth: "1.5",
+    opacity: "0.6"
+  }), [80, 140, 200, 290, 360, 410, 470].map((x, i) => /*#__PURE__*/React.createElement("ellipse", {
+    key: i,
+    cx: x,
+    cy: GROUND_Y - 1 + i % 2 * 3,
+    rx: 6 + i % 3 * 3,
+    ry: 3 + i % 2,
+    fill: "none",
+    stroke: "#a0947a",
+    strokeWidth: "0.9",
+    opacity: "0.5"
+  })), /*#__PURE__*/React.createElement("path", {
+    d: `M 0 ${GROUND_Y + 10} Q 80 ${GROUND_Y + 7} 160 ${GROUND_Y + 10} Q 260 ${GROUND_Y + 14} 360 ${GROUND_Y + 9} Q 440 ${GROUND_Y + 12} 540 ${GROUND_Y + 10}`,
+    fill: "none",
+    stroke: "#6a8a8a",
+    strokeWidth: "1",
+    opacity: "0.45"
+  }), [60, 180, 310, 430].map((x, i) => /*#__PURE__*/React.createElement("path", {
+    key: `w${i}`,
+    d: `M ${x} ${GROUND_Y + 15 + i * 2} Q ${x + 16} ${GROUND_Y + 12 + i * 2} ${x + 32} ${GROUND_Y + 15 + i * 2}`,
+    fill: "none",
+    stroke: "#7a9a9a",
+    strokeWidth: "0.6",
+    opacity: "0.35"
+  })));
+  if (id === "boggy_pool") return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+    d: `M 0 ${GROUND_Y} Q 70 ${GROUND_Y - 5} 140 ${GROUND_Y - 2} Q 220 ${GROUND_Y - 7} 300 ${GROUND_Y - 3} Q 380 ${GROUND_Y - 5} 460 ${GROUND_Y - 2} L 540 ${GROUND_Y - 4}`,
+    fill: "none",
+    stroke: "#7a7252",
+    strokeWidth: "1.2",
+    opacity: "0.5"
+  }), [50, 180, 350, 470].map((x, i) => /*#__PURE__*/React.createElement("g", {
+    key: i,
+    opacity: "0.55"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: `M ${x - 10} ${GROUND_Y - 2} Q ${x} ${GROUND_Y - 16 - i % 2 * 5} ${x + 10} ${GROUND_Y - 2}`,
+    fill: "#7a9a5a",
+    opacity: "0.2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: `M ${x - 10} ${GROUND_Y - 2} Q ${x} ${GROUND_Y - 16 - i % 2 * 5} ${x + 10} ${GROUND_Y - 2}`,
+    fill: "none",
+    stroke: "#5a7a3a",
+    strokeWidth: "0.9"
+  }))), /*#__PURE__*/React.createElement("ellipse", {
+    cx: "270",
+    cy: GROUND_Y + 16,
+    rx: "65",
+    ry: "10",
+    fill: "#8aa0a0",
+    opacity: "0.12"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: "270",
+    cy: GROUND_Y + 16,
+    rx: "65",
+    ry: "10",
+    fill: "none",
+    stroke: "#6a8a8a",
+    strokeWidth: "0.9",
+    opacity: "0.45"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: "270",
+    cy: GROUND_Y + 16,
+    rx: "45",
+    ry: "6",
+    fill: "none",
+    stroke: "#7a9a9a",
+    strokeWidth: "0.5",
+    opacity: "0.3"
+  }), [110, 230, 400].map((x, i) => /*#__PURE__*/React.createElement("g", {
+    key: `c${i}`,
+    opacity: "0.55"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: x,
+    y1: GROUND_Y - 2,
+    x2: x,
+    y2: GROUND_Y - 22,
+    stroke: "#7a8a5a",
+    strokeWidth: "0.6"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: x,
+    cy: GROUND_Y - 24,
+    rx: "4",
+    ry: "3.5",
+    fill: "#d8d0b8",
+    opacity: "0.6"
+  }))));
+  if (id === "woodland_floor") return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+    d: `M 0 ${GROUND_Y} Q 100 ${GROUND_Y - 3} 200 ${GROUND_Y - 1} Q 340 ${GROUND_Y - 4} 440 ${GROUND_Y - 1} L 540 ${GROUND_Y - 2}`,
+    fill: "none",
+    stroke: "#7a6a52",
+    strokeWidth: "1",
+    opacity: "0.4"
+  }), [25, 70, 120, 175, 230, 285, 340, 395, 440, 500].map((x, i) => /*#__PURE__*/React.createElement("ellipse", {
+    key: i,
+    cx: x,
+    cy: GROUND_Y + i % 3 * 5 - 1,
+    rx: 10 + i % 4 * 3,
+    ry: 4 + i % 2 * 2,
+    fill: i % 3 === 0 ? "#9a7a4a" : i % 3 === 1 ? "#8a6a3a" : "#7a6a4a",
+    opacity: 0.15 + i % 3 * 0.06,
+    stroke: i % 2 === 0 ? "#8a6a3a" : "#7a5a2a",
+    strokeWidth: "0.6",
+    transform: `rotate(${i * 27 + 15}, ${x}, ${GROUND_Y + i % 3 * 5})`
+  })), [60, 280, 460].map((x, i) => /*#__PURE__*/React.createElement("g", {
+    key: `b${i}`,
+    opacity: "0.45"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: x,
+    y1: GROUND_Y - 1,
+    x2: x - 10,
+    y2: GROUND_Y - 26,
+    stroke: "#5a6a3a",
+    strokeWidth: "0.8"
+  }), [0, 1, 2, 3, 4].map(j => /*#__PURE__*/React.createElement("line", {
+    key: j,
+    x1: x - j * 2 - 1,
+    y1: GROUND_Y - 5 - j * 4.5,
+    x2: x - j * 2 - 9,
+    y2: GROUND_Y - 7 - j * 4.5,
+    stroke: "#5a7a3a",
+    strokeWidth: "0.5"
+  })), [0, 1, 2, 3].map(j => /*#__PURE__*/React.createElement("line", {
+    key: `r${j}`,
+    x1: x - j * 2,
+    y1: GROUND_Y - 7 - j * 4.5,
+    x2: x - j * 2 + 7,
+    y2: GROUND_Y - 9 - j * 4.5,
+    stroke: "#5a7a3a",
+    strokeWidth: "0.4"
+  })))));
+  if (id === "wet_meadow") return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+    d: `M 0 ${GROUND_Y} Q 60 ${GROUND_Y - 5} 120 ${GROUND_Y - 2} Q 200 ${GROUND_Y - 7} 280 ${GROUND_Y - 3} Q 360 ${GROUND_Y - 6} 440 ${GROUND_Y - 2} Q 500 ${GROUND_Y - 5} 540 ${GROUND_Y - 3}`,
+    fill: "none",
+    stroke: "#6a7a4a",
+    strokeWidth: "1.3",
+    opacity: "0.5"
+  }), [55, 150, 260, 370, 480].map((x, i) => /*#__PURE__*/React.createElement("g", {
+    key: i,
+    opacity: "0.55"
+  }, [-4, -2, 0, 2, 4].map(dx => /*#__PURE__*/React.createElement("line", {
+    key: dx,
+    x1: x + dx,
+    y1: GROUND_Y - 2,
+    x2: x + dx * 1.8,
+    y2: GROUND_Y - 22 - Math.abs(dx) * 2 + i % 2 * 4,
+    stroke: "#5a7a3a",
+    strokeWidth: "0.7"
+  })))), /*#__PURE__*/React.createElement("path", {
+    d: `M 100 ${GROUND_Y + 10} Q 160 ${GROUND_Y + 7} 220 ${GROUND_Y + 10}`,
+    fill: "none",
+    stroke: "#7a9a8a",
+    strokeWidth: "0.6",
+    opacity: "0.35"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: `M 330 ${GROUND_Y + 12} Q 400 ${GROUND_Y + 9} 460 ${GROUND_Y + 13}`,
+    fill: "none",
+    stroke: "#7a9a8a",
+    strokeWidth: "0.5",
+    opacity: "0.3"
+  }), [30, 100, 200, 310, 420, 510].map((x, i) => /*#__PURE__*/React.createElement("line", {
+    key: `g${i}`,
+    x1: x,
+    y1: GROUND_Y - 1,
+    x2: x + 1,
+    y2: GROUND_Y - 8 - i % 3 * 3,
+    stroke: "#6a8a4a",
+    strokeWidth: "0.4",
+    opacity: "0.4"
+  })));
+  return null;
+}
+// ═══ MAIN COMPONENT ═══
+function ScolopacidaeKit() {
+  const svgRef = useRef(null);
+  const [body, setBody] = useState("medium");
+  const [bodyCol, setBodyCol] = useState("none");
+  const [bill, setBill] = useState("medium_straight");
+  const [billCol, setBillCol] = useState("dark");
+  const [head, setHead] = useState("plain_streaked");
+  const [legLen, setLegLen] = useState("medium");
+  const [legCol, setLegCol] = useState("blue_grey");
+  const [tail, setTail] = useState("plain");
+  const [eyePos, setEyePos] = useState("normal");
+  const [habitat, setHabitat] = useState("none");
+  const [extras, setExtras] = useState([]);
+  const [openCat, setOpenCat] = useState("body");
+  const [birdTitle, setBirdTitle] = useState("");
+  const [copied, setCopied] = useState(false);
+  // NEW: egg state
+  const [eggLaid, setEggLaid] = useState(false);
+  const [eggVerify, setEggVerify] = useState(false); // hides species hints
+  const [eggConstruction, setEggConstruction] = useState(false);
+  const [eggCodeCopied, setEggCodeCopied] = useState(false);
+  // the laying-nonce: each press of LAY THE EGG perturbs the MOTTLE only.
+  // Identity (name, latin, tier, dimensions, code) stays bound to the parts;
+  // this swerves the speckle scatter alone — the clinamen of the particular egg.
+  const [layNonce, setLayNonce] = useState(0);
+  const bd = BODIES.find(b => b.id === body);
+  const bco = BODY_COLORS.find(b => b.id === bodyCol);
+  const bl = BILLS.find(b => b.id === bill);
+  const bc = BILL_COLORS.find(b => b.id === billCol);
+  const hd = HEADS.find(h => h.id === head);
+  const ll = LEG_LENGTHS.find(l => l.id === legLen);
+  const lc = LEG_COLORS.find(l => l.id === legCol);
+  const tl = TAILS.find(t => t.id === tail);
+  const ep = EYE_POSITIONS.find(e => e.id === eyePos);
+  const hasBodyColor = bco && bco.color;
+  // colour-as-line: the ink that colour-bearing marks (hatching, accent-strokes,
+  // scapulars) take. With no plumage chosen, they stay on the skeleton ink.
+  const plumeInk = hasBodyColor ? bco.color : INK;
+  // how many lines the terminal has drawn — reported without diagnosis
+  const partCount = 6 + (hasBodyColor ? 1 : 0) + (habitat !== "none" ? 1 : 0) + (extras.length > 0 ? 1 : 0);
+  const has = id => extras.includes(id);
+  const toggleExtra = id => setExtras(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  // NEW: derive the egg from the bird's PARTS (never its species)
+  const egg = useMemo(() => birdToEgg({
+    body,
+    bill,
+    tone: bodyCol,
+    leg: legLen,
+    legCol,
+    head,
+    tail,
+    eye: eyePos,
+    hab: habitat,
+    extras
+  }), [body, bill, bodyCol, legLen, legCol, head, tail, eyePos, habitat, extras]);
+  // any change to the bird un-lays the egg (so the reveal stays a deliberate act)
+  React.useEffect(() => {
+    setEggLaid(false);
+    setLayNonce(0);
+  }, [body, bill, bodyCol, legLen, legCol, head, tail, eyePos, habitat, extras]);
+  const S_rx = bd.rx * SCALE,
+    S_ry = bd.ry * SCALE,
+    S_hr = bd.hr * SCALE;
+  const headCX = CX + bd.hx * SCALE;
+  const headCY = CY + bd.hy * SCALE;
+  const billX = headCX + bd.bx * SCALE;
+  const billY = headCY + bd.by * SCALE;
+  const eyeOX = (bd.ex + (ep ? ep.ox * bd.hr : 0)) * SCALE;
+  const eyeOY = (bd.ey + (ep ? ep.oy * bd.hr : 0)) * SCALE;
+  const txPos = CX + bd.tx * SCALE;
+  const tyPos = CY + bd.ty * SCALE;
+  const legY0 = CY + bd.ly * SCALE;
+  const legY1 = legY0 + ll.len;
+  const lx1 = CX - bd.ls * SCALE * 0.3;
+  const lx2 = CX + bd.ls * SCALE * 0.4;
+  const getSvgString = useCallback(() => {
+    if (!svgRef.current) return "";
+    const clone = svgRef.current.cloneNode(true);
+    const comment = document.createComment(`\n  Scolopacidae Construction Kit\n` + `  ${birdTitle || 'Untitled wader'}\n` + `  Body: ${bd.label} (${bco.label}) | Bill: ${bl.label} (${bc.label})\n` + `  Head: ${hd.label} | Eye: ${ep.label}\n` + `  Legs: ${lc.label}, ${ll.label} | Tail: ${tl.label}\n` + `  Habitat: ${HABITATS.find(h => h.id === habitat)?.label}\n` + (extras.length ? `  Features: ${extras.join(', ')}\n` : '') + `  Egg: ${egg.label} (${egg.sub}) · type ${egg.code}\n` + `  Generated: ${new Date().toLocaleDateString('en-GB')}\n` + `  An instrument for Conceptual Ornithology · Quid ni?\n`);
+    clone.insertBefore(comment, clone.firstChild);
+    return new XMLSerializer().serializeToString(clone);
+  }, [birdTitle, bd, bco, bl, bc, hd, ep, lc, ll, tl, habitat, extras, egg]);
+  const copySVG = useCallback(async () => {
+    const svg = getSvgString();
+    try {
+      await navigator.clipboard.writeText(svg);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = svg;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  }, [getSvgString]);
+  const exportSVG = useCallback(() => {
+    const svg = getSvgString();
+    const blob = new Blob([svg], {
+      type: 'image/svg+xml'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(birdTitle || 'scolopacid').replace(/\s+/g, '_')}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [getSvgString, birdTitle]);
+  const copyEggCode = useCallback(async txCode => {
+    try {
+      await navigator.clipboard.writeText(txCode);
+    } catch {}
+    setEggCodeCopied(true);
+    setTimeout(() => setEggCodeCopied(false), 2000);
+  }, []);
+  const categories = [{
+    key: "body",
+    label: "Body",
+    term: "Corpus"
+  }, {
+    key: "bill",
+    label: "Bill",
+    term: "Rostrum"
+  }, {
+    key: "head",
+    label: "Head",
+    term: "Caput"
+  }, {
+    key: "eye",
+    label: "Eye",
+    term: "Orbita"
+  }, {
+    key: "legs",
+    label: "Legs",
+    term: "Tarsus"
+  }, {
+    key: "tail",
+    label: "Tail",
+    term: "Cauda"
+  }, {
+    key: "habitat",
+    label: "Place",
+    term: "Locus"
+  }, {
+    key: "extras",
+    label: "Marks",
+    term: "Notae"
+  }];
+  const tagStyle = egg.tier === "real" ? ST.eggTagReal : egg.tier === "hypothetical" ? ST.eggTagPatova : ST.eggTagImposs;
+  const tagText = egg.tier === "real" ? "catalogued" : egg.tier === "hypothetical" ? "'patovum" : egg.tier === "cf" ? "cf." : "aberrans";
+  return /*#__PURE__*/React.createElement("div", {
+    style: ST.page
+  }, /*#__PURE__*/React.createElement("header", {
+    style: ST.header
+  }, /*#__PURE__*/React.createElement("div", {
+    style: ST.rule
+  }), /*#__PURE__*/React.createElement("h1", {
+    style: ST.title
+  }, "Construction Kit"), /*#__PURE__*/React.createElement("p", {
+    style: ST.subtitle
+  }, "Scolopacidae \xB7 Dichotomous SVG"), /*#__PURE__*/React.createElement("p", {
+    style: ST.edition
+  }, "An instrument for Conceptual Ornithology"), /*#__PURE__*/React.createElement("div", {
+    style: ST.rule
+  })), /*#__PURE__*/React.createElement("div", {
+    style: ST.canvasWrap
+  }, /*#__PURE__*/React.createElement("svg", {
+    ref: svgRef,
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 0 540 400",
+    width: "540",
+    height: "400",
+    style: ST.svg
+  }, /*#__PURE__*/React.createElement("rect", {
+    width: "540",
+    height: "400",
+    fill: SKY
+  }), /*#__PURE__*/React.createElement("g", {
+    fill: "none"
+  }, /*#__PURE__*/React.createElement("g", {
+    opacity: "0.15",
+    stroke: SEPIA,
+    strokeWidth: "0.5"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: CX,
+    cy: CY,
+    r: S_rx * 1.15
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: headCX,
+    cy: headCY,
+    r: S_hr * 1.8
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: CX + S_rx * 0.1,
+    cy: CY + S_ry * 0.6,
+    r: Math.max(S_rx, S_ry) * 0.8
+  })), /*#__PURE__*/React.createElement("circle", {
+    cx: CX,
+    cy: CY,
+    r: Math.max(S_rx, S_ry) * 2,
+    stroke: MIDSEP,
+    strokeWidth: "0.5",
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("g", {
+    opacity: "0.22",
+    stroke: SEPIA,
+    strokeWidth: "0.4",
+    strokeDasharray: "4,6"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: CX - 130,
+    y1: CY,
+    x2: CX + 150,
+    y2: CY
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: CX,
+    y1: CY - 118,
+    x2: CX,
+    y2: CY + 118
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: billX,
+    y1: billY,
+    x2: txPos + 40,
+    y2: tyPos
+  }))), /*#__PURE__*/React.createElement(HabitatSVG, {
+    id: habitat
+  }), has("rufous_patch") && /*#__PURE__*/React.createElement("g", {
+    opacity: "0.5"
+  }, [-0.28, -0.08, 0.12, 0.32].map((f, i) => /*#__PURE__*/React.createElement("line", {
+    key: i,
+    x1: CX - S_rx * 0.45,
+    y1: CY + S_ry * f,
+    x2: CX + S_rx * 0.55,
+    y2: CY + S_ry * f - 2,
+    stroke: RUFOUS,
+    strokeWidth: "1.3",
+    opacity: "0.7",
+    transform: `rotate(${bd.rot}, ${CX}, ${CY})`
+  }))), /*#__PURE__*/React.createElement("g", {
+    transform: `translate(${CX},${CY}) rotate(${bd.rot})`
+  }, /*#__PURE__*/React.createElement("ellipse", {
+    rx: S_rx,
+    ry: S_ry,
+    fill: "none",
+    stroke: INK,
+    strokeWidth: "2",
+    opacity: "1"
+  }), /*#__PURE__*/React.createElement("g", {
+    opacity: "0.2"
+  }, [-.45, -.2, .05, .28, .45].map((f, i) => /*#__PURE__*/React.createElement("line", {
+    key: i,
+    x1: -S_rx * 0.82,
+    y1: S_ry * f,
+    x2: S_rx * 0.82,
+    y2: S_ry * (f - 0.02),
+    stroke: plumeInk,
+    strokeWidth: hasBodyColor ? 0.8 : 0.6,
+    opacity: hasBodyColor ? 0.5 : 0.3,
+    transform: `rotate(${f * 2.5})`
+  })))), has("scapular_lines") && /*#__PURE__*/React.createElement("g", null, [-0.35, -0.15, 0.15, 0.35].map((f, i) => /*#__PURE__*/React.createElement("path", {
+    key: i,
+    d: `M ${CX - S_rx * 0.5} ${CY + S_ry * f - 3} Q ${CX} ${CY + S_ry * f - 7} ${CX + S_rx * 0.6} ${CY + S_ry * f - 2}`,
+    fill: "none",
+    stroke: hasBodyColor ? plumeInk : MIDSEP,
+    strokeWidth: "1.3",
+    opacity: hasBodyColor ? 0.85 : 0.6
+  }))), /*#__PURE__*/React.createElement("path", {
+    d: `M ${CX + bd.hx * SCALE * 0.25} ${CY + bd.hy * SCALE * 0.5} Q ${CX + S_rx * 0.3} ${CY - S_ry * 0.55} ${txPos - 4} ${tyPos + 6}`,
+    fill: "none",
+    stroke: FAINT,
+    strokeWidth: "1.2",
+    opacity: "0.7"
+  }), /*#__PURE__*/React.createElement("g", {
+    transform: `translate(${CX},${CY}) rotate(${bd.rot})`
+  }, /*#__PURE__*/React.createElement("polygon", {
+    points: `${-S_rx * 0.15},${-S_ry * 0.5} ${S_rx * 0.95},${-S_ry * 0.1} ${S_rx * 0.35},${S_ry * 0.55}`,
+    fill: "none",
+    stroke: FAINT,
+    strokeWidth: "1.1",
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: -S_rx * 0.02,
+    y1: -S_ry * 0.28,
+    x2: S_rx * 0.7,
+    y2: -S_ry * 0.02,
+    stroke: hasBodyColor ? plumeInk : FAINT,
+    strokeWidth: hasBodyColor ? 0.9 : 0.6,
+    opacity: hasBodyColor ? 0.55 : 0.3
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: S_rx * 0.05,
+    y1: -S_ry * 0.08,
+    x2: S_rx * 0.62,
+    y2: S_ry * 0.16,
+    stroke: hasBodyColor ? plumeInk : FAINT,
+    strokeWidth: hasBodyColor ? 0.9 : 0.6,
+    opacity: hasBodyColor ? 0.55 : 0.3
+  })), has("wing_bar") && /*#__PURE__*/React.createElement("path", {
+    d: `M ${CX + bd.hx * SCALE * 0.15} ${CY + bd.hy * SCALE * 0.45} Q ${CX + S_rx * 0.35} ${CY - S_ry * 0.45} ${txPos - 8} ${tyPos + 8}`,
+    fill: "none",
+    stroke: hasBodyColor ? plumeInk : FAINT,
+    strokeWidth: "1.3",
+    opacity: "0.7",
+    strokeDasharray: "5,3"
+  }), tl.id === "plain" && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos,
+    x2: txPos + 30,
+    y2: tyPos - 5,
+    stroke: INK,
+    strokeWidth: "1.8",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos + 3,
+    x2: txPos + 28,
+    y2: tyPos,
+    stroke: FAINT,
+    strokeWidth: "1.1",
+    strokeLinecap: "round",
+    opacity: "0.5"
+  })), tl.id === "elevated" && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos,
+    x2: txPos + 32,
+    y2: tyPos - 15,
+    stroke: INK,
+    strokeWidth: "1.8",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos + 2,
+    x2: txPos + 30,
+    y2: tyPos - 10,
+    stroke: FAINT,
+    strokeWidth: "1.1",
+    strokeLinecap: "round",
+    opacity: "0.5"
+  })), tl.id === "spread_display" && /*#__PURE__*/React.createElement("g", null, [-20, -11, -3, 5, 13, 21].map((a, i) => /*#__PURE__*/React.createElement("line", {
+    key: i,
+    x1: txPos,
+    y1: tyPos,
+    x2: txPos + Math.cos((a - 5) * Math.PI / 180) * 42,
+    y2: tyPos + Math.sin((a - 5) * Math.PI / 180) * 42,
+    stroke: i === 0 || i === 5 ? RUFOUS : INK,
+    strokeWidth: i === 0 || i === 5 ? 2.2 : 1.3,
+    strokeLinecap: "round",
+    opacity: i === 0 || i === 5 ? 0.85 : 0.7
+  })), [0, 1].map(i => {
+    const bx = txPos + 46,
+      by = tyPos + (i === 0 ? -16 : 18);
+    return /*#__PURE__*/React.createElement("g", {
+      key: `v${i}`,
+      opacity: "0.4"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: `M ${bx} ${by} Q ${bx + 7} ${by - 3} ${bx + 14} ${by}`,
+      fill: "none",
+      stroke: FAINT,
+      strokeWidth: "0.8"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: `M ${bx + 4} ${by + 5} Q ${bx + 11} ${by + 2} ${bx + 18} ${by + 5}`,
+      fill: "none",
+      stroke: FAINT,
+      strokeWidth: "0.6"
+    }));
+  })), tl.id === "long_barred" && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos - 2,
+    x2: txPos + 36,
+    y2: tyPos - 6,
+    stroke: INK,
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos + 4,
+    x2: txPos + 34,
+    y2: tyPos + 1,
+    stroke: INK,
+    strokeWidth: "1.8",
+    strokeLinecap: "round",
+    opacity: "0.7"
+  }), [10, 19, 28].map(d => /*#__PURE__*/React.createElement("line", {
+    key: d,
+    x1: txPos + d,
+    y1: tyPos - 11,
+    x2: txPos + d,
+    y2: tyPos + 7,
+    stroke: hasBodyColor ? plumeInk : FAINT,
+    strokeWidth: "0.9",
+    opacity: "0.4"
+  }))), tl.id === "body_bob" && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos,
+    x2: txPos + 28,
+    y2: tyPos - 12,
+    stroke: INK,
+    strokeWidth: "1.8",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: txPos,
+    y1: tyPos + 2,
+    x2: txPos + 26,
+    y2: tyPos - 8,
+    stroke: FAINT,
+    strokeWidth: "1.1",
+    strokeLinecap: "round",
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("g", {
+    opacity: "0.3"
+  }, [-1, 0, 1].map(i => /*#__PURE__*/React.createElement("path", {
+    key: `l${i}`,
+    d: `M ${CX - S_rx - 10} ${CY + i * 15} Q ${CX - S_rx - 16} ${CY + i * 15 - 6} ${CX - S_rx - 10} ${CY + i * 15 - 12}`,
+    fill: "none",
+    stroke: FAINT,
+    strokeWidth: "0.8"
+  })))), (has("bob_lines") || tl.id === "elevated") && /*#__PURE__*/React.createElement("g", {
+    opacity: "0.4"
+  }, [0, 9, -9].map((dy, i) => /*#__PURE__*/React.createElement("path", {
+    key: i,
+    d: `M ${txPos + 34} ${tyPos - 18 + dy} Q ${txPos + 40} ${tyPos - 24 + dy} ${txPos + 46} ${tyPos - 18 + dy}`,
+    fill: "none",
+    stroke: FAINT,
+    strokeWidth: i === 0 ? 1 : 0.7
+  }))), /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+    x1: lx1,
+    y1: legY0,
+    x2: lx1 - 3,
+    y2: legY1,
+    stroke: lc.color,
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: lx1 - 7,
+    y1: legY1,
+    x2: lx1 + 3,
+    y2: legY1,
+    stroke: lc.color,
+    strokeWidth: "1.3"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: lx2,
+    y1: legY0,
+    x2: lx2 + 2,
+    y2: legY1,
+    stroke: lc.color,
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: lx2 - 4,
+    y1: legY1,
+    x2: lx2 + 6,
+    y2: legY1,
+    stroke: lc.color,
+    strokeWidth: "1.3"
+  })), has("belly_patch") && /*#__PURE__*/React.createElement("g", {
+    opacity: "0.6"
+  }, [0.18, 0.34, 0.5, 0.66].map((f, i) => /*#__PURE__*/React.createElement("line", {
+    key: i,
+    x1: CX - S_rx * 0.3,
+    y1: CY + S_ry * f,
+    x2: CX + S_rx * 0.32,
+    y2: CY + S_ry * f,
+    stroke: INK,
+    strokeWidth: "1.6",
+    strokeLinecap: "round",
+    opacity: 0.8 - i * 0.12
+  }))), has("flank_barring") && /*#__PURE__*/React.createElement("g", {
+    opacity: "0.5"
+  }, [0.15, 0.3, 0.45, 0.6, 0.75].map((f, i) => /*#__PURE__*/React.createElement("line", {
+    key: i,
+    x1: CX - S_rx * 0.1,
+    y1: CY + S_ry * f,
+    x2: CX + S_rx * 0.35,
+    y2: CY + S_ry * f,
+    stroke: hasBodyColor ? plumeInk : FAINT,
+    strokeWidth: "0.9"
+  }))), has("breast_streaking") && /*#__PURE__*/React.createElement("g", {
+    opacity: "0.55"
+  }, [-0.6, -0.35, -0.1, 0.15, 0.4].map((f, i) => /*#__PURE__*/React.createElement("line", {
+    key: i,
+    x1: CX + bd.hx * SCALE * 0.3 + f * 16,
+    y1: CY - S_ry * 0.1 + Math.abs(f) * 8,
+    x2: CX + bd.hx * SCALE * 0.3 + f * 12,
+    y2: CY + S_ry * 0.5 + Math.abs(f) * 5,
+    stroke: hasBodyColor ? plumeInk : FAINT,
+    strokeWidth: "0.9"
+  }))), has("shoulder_spur") && /*#__PURE__*/React.createElement("path", {
+    d: `M ${CX + bd.hx * SCALE * 0.5} ${CY + bd.hy * SCALE * 0.05} Q ${CX + bd.hx * SCALE * 0.33} ${CY - S_ry * 0.35} ${CX + bd.hx * SCALE * 0.15} ${CY + bd.hy * SCALE * 0.5}`,
+    fill: "none",
+    stroke: INK,
+    strokeWidth: "1.2",
+    strokeDasharray: "3,3",
+    opacity: "0.6"
+  }), has("white_rump") && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+    d: `M ${txPos - 6} ${tyPos - S_ry * 0.35} L ${txPos + 12} ${tyPos} L ${txPos - 6} ${tyPos + S_ry * 0.35} Z`,
+    fill: "none",
+    stroke: FAINT,
+    strokeWidth: "0.8",
+    strokeDasharray: "2,3",
+    opacity: "0.55"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: txPos + 16,
+    y: tyPos + S_ry * 0.6,
+    fontSize: "8",
+    fill: MOSS,
+    opacity: "0.8",
+    fontFamily: MONO
+  }, "rump: white")), /*#__PURE__*/React.createElement("circle", {
+    cx: headCX,
+    cy: headCY,
+    r: S_hr,
+    fill: "none",
+    stroke: INK,
+    strokeWidth: "1.8",
+    opacity: "1"
+  }), /*#__PURE__*/React.createElement("g", null, hd.render(S_hr / SCALE).map((line, i) => {
+    const ink = hasBodyColor && line.pale ? plumeInk : FAINT;
+    return /*#__PURE__*/React.createElement("path", {
+      key: i,
+      d: line.d,
+      fill: "none",
+      stroke: ink,
+      strokeWidth: line.w,
+      opacity: line.o,
+      strokeLinecap: "round",
+      transform: `translate(${headCX},${headCY}) scale(${SCALE})`
+    });
+  })), /*#__PURE__*/React.createElement("circle", {
+    cx: headCX + eyeOX,
+    cy: headCY + eyeOY,
+    r: (eyePos === "high" ? bd.hr * 0.2 : bd.hr * 0.17) * SCALE,
+    fill: SEPIA
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: headCX + eyeOX + 0.6,
+    cy: headCY + eyeOY - 0.6,
+    r: bd.hr * 0.06 * SCALE,
+    fill: CARDW
+  }), /*#__PURE__*/React.createElement("g", {
+    transform: `translate(${billX},${billY}) scale(${SCALE})`
+  }, /*#__PURE__*/React.createElement("path", {
+    d: bl.path,
+    fill: "none",
+    stroke: bc.baseColor || bc.color || INK,
+    strokeWidth: bl.w,
+    strokeLinecap: "round",
+    opacity: "1"
+  })), /*#__PURE__*/React.createElement("g", {
+    opacity: "0.55"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: billX,
+    y1: billY - 13,
+    x2: billX - bl.len * SCALE,
+    y2: billY - 13,
+    stroke: MIDSEP,
+    strokeWidth: "0.5"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: billX,
+    y1: billY - 16,
+    x2: billX,
+    y2: billY - 10,
+    stroke: MIDSEP,
+    strokeWidth: "0.4"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: billX - bl.len * SCALE,
+    y1: billY - 16,
+    x2: billX - bl.len * SCALE,
+    y2: billY - 10,
+    stroke: MIDSEP,
+    strokeWidth: "0.4"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: billX - bl.len * SCALE / 2,
+    y: billY - 18,
+    fontSize: "8",
+    fill: MIDSEP,
+    fontFamily: MONO,
+    textAnchor: "middle"
+  }, bl.term)), has("construction") && /*#__PURE__*/React.createElement("g", {
+    opacity: "0.3"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: CX - S_rx - 8,
+    y1: CY,
+    x2: CX - S_rx - 8,
+    y2: CY - S_ry,
+    stroke: MIDSEP,
+    strokeWidth: "0.4"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: CX - S_rx - 12,
+    y: CY - S_ry * 0.5,
+    fontSize: "7.5",
+    fill: MIDSEP,
+    fontFamily: MONO,
+    textAnchor: "end"
+  }, "r", Math.round(S_ry))), birdTitle && /*#__PURE__*/React.createElement("text", {
+    x: "270",
+    y: "393",
+    textAnchor: "middle",
+    fontSize: "12",
+    fill: SEPIA,
+    opacity: "0.5",
+    fontStyle: "italic",
+    fontFamily: SERIF
+  }, birdTitle))), /*#__PURE__*/React.createElement("div", {
+    style: ST.readout
+  }, /*#__PURE__*/React.createElement("div", {
+    style: ST.readoutHead
+  }, /*#__PURE__*/React.createElement("span", {
+    style: ST.readoutTitle
+  }, "spec-readout"), /*#__PURE__*/React.createElement("span", {
+    style: ST.readoutCaret
+  }, "\u25AE")), /*#__PURE__*/React.createElement("dl", {
+    style: ST.specList
+  }, /*#__PURE__*/React.createElement(SpecRow, {
+    k: "corpus",
+    v: bd.label,
+    sub: bd.term
+  }), /*#__PURE__*/React.createElement(SpecRow, {
+    k: "rostrum",
+    v: bl.label,
+    sub: bl.term
+  }), /*#__PURE__*/React.createElement(SpecRow, {
+    k: "caput",
+    v: hd.label
+  }), /*#__PURE__*/React.createElement(SpecRow, {
+    k: "orbita",
+    v: ep.label
+  }), /*#__PURE__*/React.createElement(SpecRow, {
+    k: "tarsus",
+    v: `${ll.label} · ${lc.label}`,
+    dot: lc.color
+  }), /*#__PURE__*/React.createElement(SpecRow, {
+    k: "cauda",
+    v: tl.label,
+    accent: tl.id === "spread_display" ? RUFOUS : null,
+    accentNote: tl.id === "spread_display" ? "winnowing fan" : null
+  }), hasBodyColor && /*#__PURE__*/React.createElement(SpecRow, {
+    k: "mantle",
+    v: bco.label,
+    accent: plumeInk,
+    accentNote: "plumage-as-line"
+  }), /*#__PURE__*/React.createElement(SpecRow, {
+    k: "locus",
+    v: HABITATS.find(h => h.id === habitat)?.label
+  }), extras.length > 0 && /*#__PURE__*/React.createElement(SpecRow, {
+    k: "notae",
+    v: extras.map(e => EXTRAS.find(x => x.id === e)?.label || e).join(" · ")
+  })), /*#__PURE__*/React.createElement("div", {
+    style: ST.readsAs
+  }, /*#__PURE__*/React.createElement("span", null, partCount, " parts assembled ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#d8d2c4"
+    }
+  }, "\u2192"), " ", /*#__PURE__*/React.createElement("em", {
+    style: ST.readsAwait
+  }, "awaiting egg")))), /*#__PURE__*/React.createElement("div", {
+    style: ST.eggSection
+  }, !eggLaid ? /*#__PURE__*/React.createElement("button", {
+    style: ST.layBtn,
+    onClick: () => {
+      setEggLaid(true);
+      setLayNonce(n => n + 1);
+    }
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: MOSS
+    }
+  }, "\u25B8"), " Lay the egg"), /*#__PURE__*/React.createElement("span", {
+    style: ST.layHint
+  }, "verify your bird by the egg it ought to lay")) : (() => {
+    // the seed that draws THIS laying's freckles — shared by the SVG and
+    // the transmit code, so the Ova Transmissor rebuilds the exact egg.
+    const mottleSeed = (egg.seed ^ hashStr("lay#" + layNonce)) >>> 0;
+    // OT reads `species·seed`. For catalogued (real) eggs the species key
+    // round-trips to the pixel. For stranger tiers it summons a kin egg,
+    // so the code leads with the laying-seed as a morphospace coordinate.
+    // A real egg travels as its NAME — the catalogue round-trips it to
+    // the pixel. Every other tier travels as its BODY: the full rich
+    // code, so a 'patovum arrives still a 'patovum, mottle and all.
+    const txCode = egg.tier === "real" ? `${egg.nearest}·${mottleSeed}` : encodeRichCode(egg, mottleSeed);
+    return /*#__PURE__*/React.createElement("div", {
+      style: ST.eggReveal
+    }, /*#__PURE__*/React.createElement(EggSVG, {
+      egg: egg,
+      showConstruction: eggConstruction,
+      mottleSeed: mottleSeed
+    }), /*#__PURE__*/React.createElement("div", {
+      style: ST.eggCard
+    }, /*#__PURE__*/React.createElement("div", {
+      style: ST.eggCardRow
+    }, /*#__PURE__*/React.createElement("span", {
+      style: egg.tier === "real" ? ST.eggLabel : ST.eggLabelLatin
+    }, egg.label), /*#__PURE__*/React.createElement("span", {
+      style: tagStyle
+    }, tagText)), /*#__PURE__*/React.createElement("p", {
+      style: ST.eggSub
+    }, egg.sub), egg.tier === "real" && /*#__PURE__*/React.createElement("p", {
+      style: ST.eggNote
+    }, "The parts cohere. You have made this bird \u2014 the egg is the proof."), egg.tier === "cf" && /*#__PURE__*/React.createElement("p", {
+      style: ST.eggNote
+    }, "Close. Something is a touch off \u2014 the egg recognises the family, not quite the species. Look again."), egg.tier === "aberrans" && /*#__PURE__*/React.createElement("p", {
+      style: ST.eggNote
+    }, "The parts disagree. Of the family by shape alone; the bird that laid it is not on record. Back to your studies."), egg.tier === "hypothetical" && /*#__PURE__*/React.createElement("p", {
+      style: ST.eggNote
+    }, "An imaginary solution to the problem of which came first. You have made a creature whose egg precedes its bird \u2014 and may precede it forever."), /*#__PURE__*/React.createElement("div", {
+      style: ST.eggCodeRow
+    }, /*#__PURE__*/React.createElement("span", {
+      style: ST.eggCodeLabel
+    }, "egg code"), /*#__PURE__*/React.createElement("code", {
+      style: ST.eggCode
+    }, txCode), /*#__PURE__*/React.createElement("button", {
+      style: {
+        ...ST.eggCodeBtn,
+        ...(eggCodeCopied ? {
+          background: '#5a6a3a',
+          color: '#faf6f1'
+        } : {})
+      },
+      onClick: () => copyEggCode(txCode)
+    }, eggCodeCopied ? "✓" : "copy")), /*#__PURE__*/React.createElement("p", {
+      style: ST.eggCodeHint
+    }, egg.tier === "real" ? "transmit to the Ova Transmissor — this exact egg, mottle and all" : "transmit to the Ova Transmissor — this exact egg, its whole imaginary body carried in the code"), /*#__PURE__*/React.createElement("div", {
+      style: ST.eggToggleRow
+    }, /*#__PURE__*/React.createElement("button", {
+      style: {
+        ...ST.eggMiniToggle,
+        ...(eggConstruction ? ST.eggMiniOn : {})
+      },
+      onClick: () => setEggConstruction(v => !v)
+    }, eggConstruction ? "■" : "□", " mathematics"), /*#__PURE__*/React.createElement("button", {
+      style: ST.eggMiniToggle,
+      onClick: () => setEggLaid(false)
+    }, "\u21BA hide egg"))));
+  })()), /*#__PURE__*/React.createElement("div", {
+    style: ST.titleRow
+  }, /*#__PURE__*/React.createElement("input", {
+    style: ST.titleInput,
+    value: birdTitle,
+    onChange: e => setBirdTitle(e.target.value),
+    placeholder: "Name your bird (optional)"
+  }), /*#__PURE__*/React.createElement("button", {
+    style: {
+      ...ST.copyBtn,
+      ...(copied ? {
+        background: '#ddd5cb'
+      } : {})
+    },
+    onClick: copySVG
+  }, copied ? "Copied!" : "Copy SVG"), /*#__PURE__*/React.createElement("button", {
+    style: ST.exportBtn,
+    onClick: exportSVG
+  }, "SVG")), /*#__PURE__*/React.createElement("button", {
+    style: {
+      ...ST.verifyToggle,
+      ...(eggVerify ? ST.verifyToggleOn : {})
+    },
+    onClick: () => setEggVerify(v => !v)
+  }, eggVerify ? "●" : "○", " EGG VERIFY MODE", /*#__PURE__*/React.createElement("span", {
+    style: ST.verifyHint
+  }, eggVerify ? "species hints hidden — rely on your own eye" : "advanced: hide the species hints under each part")), /*#__PURE__*/React.createElement("nav", {
+    style: ST.catNav
+  }, categories.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.key,
+    onClick: () => setOpenCat(c.key),
+    style: {
+      ...ST.catTab,
+      ...(openCat === c.key ? ST.catTabActive : {})
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: ST.catLabel
+  }, c.label), /*#__PURE__*/React.createElement("span", {
+    style: ST.catTerm
+  }, c.term)))), /*#__PURE__*/React.createElement("div", {
+    style: ST.panel
+  }, openCat === "body" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    style: ST.subHead
+  }, "Body shape"), /*#__PURE__*/React.createElement(RadioGroup, {
+    items: BODIES,
+    value: body,
+    onChange: setBody,
+    hideNote: eggVerify
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      ...ST.subHead,
+      marginTop: 18
+    }
+  }, "Plumage tone"), /*#__PURE__*/React.createElement(RadioGroup, {
+    items: BODY_COLORS,
+    value: bodyCol,
+    onChange: setBodyCol,
+    colorDot: true,
+    hideNote: eggVerify
+  })), openCat === "bill" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    style: ST.subHead
+  }, "Bill shape"), /*#__PURE__*/React.createElement(RadioGroup, {
+    items: BILLS,
+    value: bill,
+    onChange: setBill,
+    hideNote: eggVerify
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      ...ST.subHead,
+      marginTop: 18
+    }
+  }, "Bill colour"), /*#__PURE__*/React.createElement(RadioGroup, {
+    items: BILL_COLORS,
+    value: billCol,
+    onChange: setBillCol,
+    colorDot: true,
+    colorKey: "baseColor",
+    fallbackColor: INK,
+    hideNote: eggVerify
+  })), openCat === "head" && /*#__PURE__*/React.createElement(RadioGroup, {
+    items: HEADS,
+    value: head,
+    onChange: setHead,
+    hideNote: eggVerify
+  }), openCat === "eye" && /*#__PURE__*/React.createElement(RadioGroup, {
+    items: EYE_POSITIONS,
+    value: eyePos,
+    onChange: setEyePos,
+    hideNote: eggVerify
+  }), openCat === "legs" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    style: ST.subHead
+  }, "Tarsus length"), /*#__PURE__*/React.createElement(RadioGroup, {
+    items: LEG_LENGTHS,
+    value: legLen,
+    onChange: setLegLen,
+    hideNote: eggVerify
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      ...ST.subHead,
+      marginTop: 18
+    }
+  }, "Tarsus colour"), /*#__PURE__*/React.createElement(RadioGroup, {
+    items: LEG_COLORS,
+    value: legCol,
+    onChange: setLegCol,
+    colorDot: true,
+    hideNote: eggVerify
+  })), openCat === "tail" && /*#__PURE__*/React.createElement(RadioGroup, {
+    items: TAILS,
+    value: tail,
+    onChange: setTail,
+    hideNote: eggVerify
+  }), openCat === "habitat" && /*#__PURE__*/React.createElement(RadioGroup, {
+    items: HABITATS,
+    value: habitat,
+    onChange: setHabitat,
+    hideNote: eggVerify
+  }), openCat === "extras" && /*#__PURE__*/React.createElement("div", null, EXTRAS.map(ex => /*#__PURE__*/React.createElement("button", {
+    key: ex.id,
+    onClick: () => toggleExtra(ex.id),
+    style: {
+      ...ST.option,
+      ...(has(ex.id) ? ST.optionActive : {})
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: ST.optTop
+  }, /*#__PURE__*/React.createElement("span", {
+    style: ST.optCheck
+  }, has(ex.id) ? "■" : "□"), /*#__PURE__*/React.createElement("span", {
+    style: ST.optLabel
+  }, ex.label)), /*#__PURE__*/React.createElement("span", {
+    style: ST.optTerm
+  }, ex.term), !eggVerify && /*#__PURE__*/React.createElement("span", {
+    style: ST.optNote
+  }, ex.note))))), /*#__PURE__*/React.createElement("footer", {
+    style: ST.footer
+  }, /*#__PURE__*/React.createElement("p", null, "Scolopacidae Construction Kit \xB7 Conceptual Ornithology"), /*#__PURE__*/React.createElement("p", {
+    style: ST.footerSmall
+  }, "North Pennines \xB7 Quid ni?")));
+}
+function SpecRow({
+  k,
+  v,
+  sub,
+  dot,
+  accent,
+  accentNote
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: ST.specRow
+  }, /*#__PURE__*/React.createElement("dt", {
+    style: ST.specKey
+  }, k), /*#__PURE__*/React.createElement("dd", {
+    style: ST.specVal
+  }, dot && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...ST.specDot,
+      background: dot
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: accent ? {
+      color: accent,
+      fontWeight: 500
+    } : null
+  }, v), sub && /*#__PURE__*/React.createElement("span", {
+    style: ST.specSub
+  }, " \xB7 ", sub), accentNote && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...ST.specSub,
+      color: accent
+    }
+  }, " \xB7 ", accentNote)));
+}
+function RadioGroup({
+  items,
+  value,
+  onChange,
+  colorDot,
+  colorKey,
+  fallbackColor,
+  hideNote
+}) {
+  return /*#__PURE__*/React.createElement("div", null, items.map(item => /*#__PURE__*/React.createElement("button", {
+    key: item.id,
+    onClick: () => onChange(item.id),
+    style: {
+      ...ST.option,
+      ...(value === item.id ? ST.optionActive : {})
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: ST.optTop
+  }, /*#__PURE__*/React.createElement("span", {
+    style: ST.optRadio
+  }, value === item.id ? "●" : "○"), colorDot && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...ST.colorDot,
+      background: colorKey ? item[colorKey] || fallbackColor || '#888' : item.color || '#888'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: ST.optLabel
+  }, item.label)), item.term && /*#__PURE__*/React.createElement("span", {
+    style: ST.optTerm
+  }, item.term), item.note && !hideNote && /*#__PURE__*/React.createElement("span", {
+    style: ST.optNote
+  }, item.note))));
+}
+const ST = {
+  page: {
+    fontFamily: SERIF,
+    maxWidth: 620,
+    margin: "0 auto",
+    padding: "20px 12px",
+    background: SKY,
+    minHeight: "100vh",
+    color: READINK
+  },
+  header: {
+    textAlign: "center",
+    marginBottom: 16
+  },
+  rule: {
+    height: 1,
+    background: "#cfd4d2",
+    margin: "8px 50px"
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 400,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    margin: "12px 0 2px",
+    color: SEPIA
+  },
+  subtitle: {
+    fontSize: 14,
+    fontStyle: "italic",
+    color: MIDSEP,
+    margin: "2px 0"
+  },
+  edition: {
+    fontSize: 10,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#9aa08e",
+    marginTop: 6,
+    fontFamily: MONO
+  },
+  canvasWrap: {
+    background: SKY,
+    border: "none",
+    borderRadius: 0,
+    overflow: "hidden",
+    marginBottom: 10
+  },
+  svg: {
+    display: "block",
+    width: "100%",
+    height: "auto"
+  },
+  // ── dark terminal: the computing itself, the pataphysical machine ──
+  readout: {
+    background: "#211c17",
+    border: "1px solid #3a3128",
+    borderRadius: 5,
+    padding: "12px 14px",
+    marginBottom: 14,
+    fontFamily: MONO
+  },
+  readoutHead: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    paddingBottom: 7,
+    borderBottom: "1px solid #3a3128"
+  },
+  readoutTitle: {
+    fontSize: 9.5,
+    letterSpacing: "0.22em",
+    textTransform: "uppercase",
+    color: "#8a7f6e"
+  },
+  readoutCaret: {
+    fontSize: 10,
+    color: MOSS,
+    animation: "none"
+  },
+  specList: {
+    margin: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: 3
+  },
+  specRow: {
+    display: "flex",
+    gap: 10,
+    alignItems: "baseline",
+    fontSize: 12,
+    lineHeight: 1.45
+  },
+  specKey: {
+    flex: "0 0 62px",
+    color: "#8a7f6e",
+    fontSize: 10,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    textAlign: "right"
+  },
+  specVal: {
+    flex: 1,
+    color: "#e8e2d6",
+    margin: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap"
+  },
+  specSub: {
+    color: "#7d7361",
+    fontSize: 11
+  },
+  specDot: {
+    width: 9,
+    height: 9,
+    borderRadius: "50%",
+    flexShrink: 0,
+    display: "inline-block",
+    border: "1px solid #4a4034"
+  },
+  readsAs: {
+    marginTop: 9,
+    paddingTop: 8,
+    borderTop: "1px solid #3a3128",
+    fontSize: 12.5,
+    color: "#a89d88",
+    fontFamily: MONO
+  },
+  readsLatin: {
+    fontFamily: SERIF,
+    fontStyle: "italic",
+    fontSize: 14.5,
+    color: "#ece6da"
+  },
+  readsAwait: {
+    fontFamily: MONO,
+    fontSize: 12.5,
+    color: MOSS,
+    letterSpacing: "0.04em"
+  },
+  readsUnknown: {
+    fontFamily: SERIF,
+    fontStyle: "italic",
+    fontSize: 12.5,
+    color: "#8a7f6e"
+  },
+  eggSection: {
+    marginBottom: 14
+  },
+  // ── the lay-button is the MACHINE: dark terminal, mono, letterspaced.
+  //    It computes; its output (the egg reveal) is the naturalist register. ──
+  layBtn: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 5,
+    padding: "15px 14px",
+    background: "#211c17",
+    border: "1px solid #3a3128",
+    borderRadius: 5,
+    cursor: "pointer",
+    fontFamily: MONO,
+    fontSize: 14,
+    letterSpacing: "0.2em",
+    textTransform: "uppercase",
+    color: "#e8e2d6"
+  },
+  layHint: {
+    fontSize: 10.5,
+    letterSpacing: "0.06em",
+    textTransform: "none",
+    fontStyle: "normal",
+    color: "#8a7f6e",
+    fontFamily: MONO
+  },
+  eggReveal: {
+    background: CARDW,
+    border: `1px solid ${CARDED}`,
+    borderRadius: 4,
+    padding: "16px 14px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8
+  },
+  eggCard: {
+    background: CARDW,
+    border: `1px solid ${CARDED}`,
+    borderRadius: 4,
+    padding: "12px 16px"
+  },
+  eggCardRow: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  eggLabel: {
+    fontSize: 20,
+    color: READINK,
+    fontWeight: 500,
+    fontFamily: SERIF
+  },
+  eggLabelLatin: {
+    fontSize: 20,
+    color: READINK,
+    fontStyle: "italic",
+    fontWeight: 400,
+    fontFamily: SERIF
+  },
+  eggSub: {
+    fontSize: 14,
+    fontStyle: "italic",
+    color: MIDSEP,
+    margin: "2px 0 0",
+    fontFamily: SERIF
+  },
+  eggNote: {
+    fontSize: 13.5,
+    color: "#5a5048",
+    margin: "8px 0 0",
+    lineHeight: 1.5,
+    fontStyle: "italic",
+    fontFamily: SERIF
+  },
+  eggTagReal: {
+    fontSize: 9,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: MOSS,
+    border: `1px solid ${MOSS}`,
+    borderRadius: 99,
+    padding: "2px 9px",
+    whiteSpace: "nowrap",
+    fontFamily: MONO
+  },
+  eggTagImposs: {
+    fontSize: 9,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: RUFOUS,
+    border: `1px solid ${RUFOUS}`,
+    borderRadius: 99,
+    padding: "2px 9px",
+    whiteSpace: "nowrap",
+    fontFamily: MONO
+  },
+  eggTagPatova: {
+    fontSize: 9,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: VIOLET,
+    border: `1px solid ${VIOLET}`,
+    borderRadius: 99,
+    padding: "2px 9px",
+    whiteSpace: "nowrap",
+    fontFamily: MONO
+  },
+  eggCodeRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12
+  },
+  eggCodeLabel: {
+    fontSize: 9,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#9aa08e",
+    fontFamily: MONO
+  },
+  eggCode: {
+    flex: 1,
+    minWidth: 0,
+    overflowX: "auto",
+    whiteSpace: "nowrap",
+    fontFamily: MONO,
+    fontSize: 15,
+    color: READINK,
+    letterSpacing: "0.05em",
+    background: SKY,
+    border: `1px solid ${CARDED}`,
+    borderRadius: 3,
+    padding: "6px 10px"
+  },
+  eggCodeBtn: {
+    padding: "6px 12px",
+    fontFamily: MONO,
+    fontSize: 10,
+    letterSpacing: "0.05em",
+    textTransform: "uppercase",
+    color: SEPIA,
+    background: SKY,
+    border: `1px solid ${CARDED}`,
+    borderRadius: 3,
+    cursor: "pointer"
+  },
+  eggCodeHint: {
+    fontSize: 11,
+    fontStyle: "italic",
+    color: "#9aa08e",
+    margin: "5px 0 0",
+    textAlign: "center",
+    fontFamily: SERIF
+  },
+  eggToggleRow: {
+    display: "flex",
+    gap: 8,
+    marginTop: 12
+  },
+  eggMiniToggle: {
+    flex: 1,
+    padding: "7px",
+    fontFamily: MONO,
+    fontSize: 11,
+    color: READINK,
+    background: "none",
+    border: `1px solid ${CARDED}`,
+    borderRadius: 3,
+    cursor: "pointer"
+  },
+  eggMiniOn: {
+    background: SKY,
+    borderColor: MIDSEP
+  },
+  titleRow: {
+    display: "flex",
+    gap: 6,
+    marginBottom: 12,
+    alignItems: "center"
+  },
+  titleInput: {
+    flex: 1,
+    padding: "8px 10px",
+    fontFamily: SERIF,
+    fontSize: 13,
+    color: READINK,
+    background: CARDW,
+    border: `1px solid ${CARDED}`,
+    borderRadius: 3
+  },
+  copyBtn: {
+    padding: "8px 14px",
+    fontFamily: MONO,
+    fontSize: 10,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    color: SEPIA,
+    background: CARDW,
+    border: `1px solid ${CARDED}`,
+    borderRadius: 3,
+    cursor: "pointer",
+    whiteSpace: "nowrap"
+  },
+  exportBtn: {
+    padding: "8px 14px",
+    fontFamily: MONO,
+    fontSize: 10,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    color: CARDW,
+    background: SEPIA,
+    border: "none",
+    borderRadius: 3,
+    cursor: "pointer",
+    whiteSpace: "nowrap"
+  },
+  verifyToggle: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 2,
+    padding: "9px 12px",
+    marginBottom: 14,
+    background: "none",
+    border: `1px solid ${CARDED}`,
+    borderRadius: 3,
+    cursor: "pointer",
+    fontFamily: MONO,
+    fontSize: 12,
+    color: READINK,
+    textAlign: "left"
+  },
+  verifyToggleOn: {
+    background: CARDW,
+    borderColor: MIDSEP
+  },
+  verifyHint: {
+    fontSize: 11,
+    fontStyle: "italic",
+    color: "#9aa08e",
+    fontFamily: SERIF
+  },
+  catNav: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 0,
+    borderBottom: `1px solid ${MIDSEP}`,
+    marginBottom: 12
+  },
+  catTab: {
+    flex: "1 1 auto",
+    minWidth: 44,
+    padding: "7px 2px",
+    background: "none",
+    border: "none",
+    borderBottom: "2px solid transparent",
+    fontFamily: MONO,
+    cursor: "pointer",
+    textAlign: "center",
+    transition: "all 0.2s",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 0
+  },
+  catTabActive: {
+    borderBottomColor: SEPIA
+  },
+  catLabel: {
+    fontSize: 10,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: READINK
+  },
+  catTerm: {
+    fontSize: 7.5,
+    fontStyle: "italic",
+    color: "#9aa08e",
+    fontFamily: SERIF
+  },
+  panel: {
+    minHeight: 180,
+    marginBottom: 20
+  },
+  subHead: {
+    fontSize: 9,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#9aa08e",
+    margin: "0 0 6px",
+    fontWeight: 400,
+    fontFamily: MONO
+  },
+  option: {
+    display: "block",
+    width: "100%",
+    textAlign: "left",
+    padding: "9px 12px",
+    marginBottom: 2,
+    background: "none",
+    border: "1px solid transparent",
+    borderRadius: 3,
+    cursor: "pointer",
+    fontFamily: SERIF,
+    transition: "all 0.15s"
+  },
+  optionActive: {
+    background: CARDW,
+    borderColor: CARDED
+  },
+  optTop: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 1
+  },
+  optRadio: {
+    fontSize: 12,
+    color: MIDSEP,
+    flexShrink: 0,
+    width: 14
+  },
+  optCheck: {
+    fontSize: 12,
+    color: MIDSEP,
+    flexShrink: 0,
+    width: 14
+  },
+  optLabel: {
+    fontSize: 14,
+    color: READINK
+  },
+  optTerm: {
+    display: "block",
+    fontSize: 10,
+    fontStyle: "italic",
+    color: MIDSEP,
+    marginLeft: 22,
+    fontFamily: SERIF
+  },
+  optNote: {
+    display: "block",
+    fontSize: 11,
+    color: "#9aa08e",
+    marginLeft: 22,
+    marginTop: 2,
+    lineHeight: 1.4
+  },
+  colorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: "50%",
+    flexShrink: 0,
+    border: `1px solid ${CARDED}`
+  },
+  footer: {
+    textAlign: "center",
+    marginTop: 24,
+    paddingTop: 16,
+    borderTop: `1px solid ${MIDSEP}`,
+    fontSize: 11,
+    fontStyle: "italic",
+    color: "#9aa08e",
+    lineHeight: 1.6,
+    fontFamily: SERIF
+  },
+  footerSmall: {
+    fontSize: 9,
+    marginTop: 3,
+    letterSpacing: "0.05em",
+    fontFamily: MONO,
+    fontStyle: "normal"
+  }
+};
+ReactDOM.createRoot(document.getElementById('scolo-root')).render(React.createElement(ScolopacidaeKit));
+</script>
+<script>
+(function(){
+  var last=0;
+  function measure(){
+    var root=document.getElementById("scolo-root");
+    return root?Math.ceil(root.getBoundingClientRect().height):document.body.scrollHeight;
+  }
+  function postH(){
+    var h=measure();
+    if(h&&Math.abs(h-last)>1){last=h;
+      if(window.parent)window.parent.postMessage({eggFrame:true,id:"scolo-root",height:h},"*");}
+  }
+  window.addEventListener("load",function(){postH();setTimeout(postH,300);setTimeout(postH,1200);});
+  if(window.ResizeObserver){var ro=new ResizeObserver(postH);window.addEventListener("load",function(){var r=document.getElementById("scolo-root");if(r)ro.observe(r);});}
+  document.addEventListener("click",function(){setTimeout(postH,200);setTimeout(postH,600);});
+})();
+</script>
+</body></html>
