@@ -1,6 +1,6 @@
-# dichotomous-svg
+# Dichotomy
 
-*The Scolopacidae Construction Kit — an instrument for conceptual ornithology*
+*An inverse key by SVG to the Scolopacidae of the North Pennines*
 
 **Live:** [or-ni-thology.cloud](https://or-ni-thology.cloud/dichotomous-svg) · **Licence:** [CC0 1.0](LICENSE) — public domain, take it, change it, no credit needed
 

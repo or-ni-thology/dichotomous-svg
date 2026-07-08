@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Scolopacidae Construction Kit</title>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dichotomy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
@@ -62,7 +62,8 @@ var OVA=(function(){
   function seedFrom(str){var h=5381;str=String(str);for(var i=0;i<str.length;i++){h=((h<<5)+h+str.charCodeAt(i))>>>0;}return h>>>0;}
   return { svg:svg, seedFrom:seedFrom };
 })();
-var MAST_EGG = OVA.svg("snipe", (Math.random() * 4294967296) >>> 0, { pad: 3 });
+var MAST_EGG  = OVA.svg("snipe", (Math.random() * 4294967296) >>> 0, { pad: 3, id: "mastA" });
+var MAST_EGG2 = OVA.svg("snipe", (Math.random() * 4294967296) >>> 0, { pad: 3, id: "mastB" });
 </script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -1807,7 +1808,7 @@ function ScolopacidaeKit() {
   const getSvgString = useCallback(() => {
     if (!svgRef.current) return "";
     const clone = svgRef.current.cloneNode(true);
-    const comment = document.createComment(`\n  Scolopacidae Construction Kit\n` + `  ${birdTitle || 'Untitled wader'}\n` + `  Body: ${bd.label} (${bco.label}) | Bill: ${bl.label} (${bc.label})\n` + `  Head: ${hd.label} | Eye: ${ep.label}\n` + `  Legs: ${lc.label}, ${ll.label} | Tail: ${tl.label}\n` + `  Habitat: ${HABITATS.find(h => h.id === habitat)?.label}\n` + (extras.length ? `  Features: ${extras.join(', ')}\n` : '') + `  Egg: ${egg.label} (${egg.sub}) · type ${egg.code}\n` + `  Generated: ${new Date().toLocaleDateString('en-GB')}\n` + `  An instrument for Conceptual Ornithology · Quid ni?\n`);
+    const comment = document.createComment(`\n  Dichotomy · the Scolopacidae construction kit\n` + `  ${birdTitle || 'Untitled wader'}\n` + `  Body: ${bd.label} (${bco.label}) | Bill: ${bl.label} (${bc.label})\n` + `  Head: ${hd.label} | Eye: ${ep.label}\n` + `  Legs: ${lc.label}, ${ll.label} | Tail: ${tl.label}\n` + `  Habitat: ${HABITATS.find(h => h.id === habitat)?.label}\n` + (extras.length ? `  Features: ${extras.join(', ')}\n` : '') + `  Egg: ${egg.label} (${egg.sub}) · type ${egg.code}\n` + `  Generated: ${new Date().toLocaleDateString('en-GB')}\n` + `  An instrument for Conceptual Ornithology · Quid ni?\n`);
     clone.insertBefore(comment, clone.firstChild);
     return new XMLSerializer().serializeToString(clone);
   }, [birdTitle, bd, bco, bl, bc, hd, ep, lc, ll, tl, habitat, extras, egg]);
@@ -1888,22 +1889,22 @@ function ScolopacidaeKit() {
     style: ST.page
   }, /*#__PURE__*/React.createElement("header", {
     style: ST.header
-  }, /*#__PURE__*/React.createElement("div", {
-    style: ST.rule
-  }), /*#__PURE__*/React.createElement("h1", {
+  }, /*#__PURE__*/React.createElement("h1", {
     style: ST.title,
-    "aria-label": "Construction Kit"
-  }, "C", React.createElement("span", {
+    "aria-label": "Dichotomy"
+  }, "DICH", React.createElement("span", {
     className: "egg-o",
     "aria-hidden": true,
     dangerouslySetInnerHTML: { __html: MAST_EGG }
-  }), "nstruction Kit"), /*#__PURE__*/React.createElement("p", {
+  }), "T", React.createElement("span", {
+    className: "egg-o",
+    "aria-hidden": true,
+    dangerouslySetInnerHTML: { __html: MAST_EGG2 }
+  }), "MY"), /*#__PURE__*/React.createElement("p", {
     style: ST.subtitle
-  }, "Scolopacidae \xB7 Dichotomous SVG"), /*#__PURE__*/React.createElement("p", {
+  }, "an inverse key by svg"), /*#__PURE__*/React.createElement("p", {
     style: ST.edition
-  }, "An instrument for Conceptual Ornithology"), /*#__PURE__*/React.createElement("div", {
-    style: ST.rule
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "The Scolopacidae of the North Pennines")), /*#__PURE__*/React.createElement("div", {
     style: ST.canvasWrap
   }, /*#__PURE__*/React.createElement("svg", {
     ref: svgRef,
@@ -2603,7 +2604,7 @@ function ScolopacidaeKit() {
     style: ST.optNote
   }, ex.note))))), /*#__PURE__*/React.createElement("footer", {
     style: ST.footer
-  }, /*#__PURE__*/React.createElement("p", null, "Scolopacidae Construction Kit \xB7 Conceptual Ornithology"), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("p", null, "Dichotomy \xB7 Conceptual Ornithology"), /*#__PURE__*/React.createElement("p", {
     style: ST.footerSmall
   }, "North Pennines \xB7 Quid ni?")));
 }
