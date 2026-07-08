@@ -62,7 +62,8 @@ var OVA=(function(){
   function seedFrom(str){var h=5381;str=String(str);for(var i=0;i<str.length;i++){h=((h<<5)+h+str.charCodeAt(i))>>>0;}return h>>>0;}
   return { svg:svg, seedFrom:seedFrom };
 })();
-var MAST_EGG = OVA.svg("snipe", (Math.random() * 4294967296) >>> 0, { pad: 3 });
+var MAST_EGG  = OVA.svg("snipe", (Math.random() * 4294967296) >>> 0, { pad: 3, id: "mastA" });
+var MAST_EGG2 = OVA.svg("snipe", (Math.random() * 4294967296) >>> 0, { pad: 3, id: "mastB" });
 </script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -1888,9 +1889,7 @@ function ScolopacidaeKit() {
     style: ST.page
   }, /*#__PURE__*/React.createElement("header", {
     style: ST.header
-  }, /*#__PURE__*/React.createElement("div", {
-    style: ST.rule
-  }), /*#__PURE__*/React.createElement("h1", {
+  }, /*#__PURE__*/React.createElement("h1", {
     style: ST.title,
     "aria-label": "Construction Kit"
   }, "C", React.createElement("span", {
@@ -1901,9 +1900,7 @@ function ScolopacidaeKit() {
     style: ST.subtitle
   }, "Scolopacidae \xB7 Dichotomous SVG"), /*#__PURE__*/React.createElement("p", {
     style: ST.edition
-  }, "An instrument for Conceptual Ornithology"), /*#__PURE__*/React.createElement("div", {
-    style: ST.rule
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "An instrument for Conceptual Ornithology")), /*#__PURE__*/React.createElement("div", {
     style: ST.canvasWrap
   }, /*#__PURE__*/React.createElement("svg", {
     ref: svgRef,
